@@ -20,6 +20,13 @@
 import time
 import typing
 import bittensor as bt
+import os
+import sys
+# Get the current directory
+current_directory = os.getcwd()
+# Construct the absolute path to the 'template' folder
+template_directory = os.path.join(current_directory)
+sys.path.append(template_directory)
 
 # Bittensor Miner Template:
 import template
