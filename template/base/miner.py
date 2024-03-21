@@ -21,11 +21,16 @@ import asyncio
 import threading
 import argparse
 import traceback
-
+import sys
 import bittensor as bt
 
 from template.base.neuron import BaseNeuron
 from template.utils.config import add_miner_args
+from template.utils.config import add_genomaster_args
+sys.path.insert(0, 'nsga-net/')
+from search import train_search
+
+import requests
 
 
 class BaseMinerNeuron(BaseNeuron):
@@ -39,6 +44,7 @@ class BaseMinerNeuron(BaseNeuron):
     def add_args(cls, parser: argparse.ArgumentParser):
         super().add_args(parser)
         add_miner_args(cls, parser)
+        add_genomaster_args(cls, parser)
 
     def __init__(self, config=None):
         super().__init__(config=config)
@@ -70,7 +76,44 @@ class BaseMinerNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: threading.Thread = None
         self.lock = asyncio.Lock()
+    
+    def request_job(self):
+        bt.logging.info(f" ⏩ Requsting Job from Genomaster: {self.config.genomaster.ip}:{self.config.genomaster.port}")
+        try:
+            # Make a POST request to the server to request a job
+            response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/request_job', json={'user_name': self.uid})
+            if response.status_code == 200:
+                return response.json()  # Return the job details
+            else:
+                return None  # No job available or user already has a job
+        except requests.ConnectionError as e:
+                bt.logging.error(f'Failed to connect to Genomaster server: {e}')
 
+    def finish_job(self, user_name, genome_string, genome_results):
+        # Make a POST request to the server to mark a job as finished
+        try:
+            response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/finish_job', json={
+                'user_name': user_name,
+                'genome_string': genome_string,
+                'response_values': genome_results
+            })
+            if response.status_code == 200:
+                bt.logging.info(f" ✅ Job {genome_string} results submitted by {user_name}. Responses: {genome_results}")
+            else:
+                bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}")
+        except Exception as e:
+                bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}')
+
+
+    def train_genome(self,config):
+        performance = train_search.main(genome=config['Genome'],
+                                                search_space = config['config']['search_space'],
+                                                init_channels = config['config']['init_channels'],
+                                                layers=config['config']['layers'], cutout=False,
+                                                epochs=config['config']['epochs'],
+                                                save='arch_{}'.format(1),
+                                                expr_root='')
+        return list(performance.values())
     def run(self):
         """
         Initiates and manages the main loop for the miner on the Bittensor network. The main loop handles graceful shutdown on keyboard interrupts and logs unforeseen errors.
@@ -112,16 +155,19 @@ class BaseMinerNeuron(BaseNeuron):
         # This loop maintains the miner's operations until intentionally stopped.
         try:
             while not self.should_exit:
-                while (
-                    self.block - self.metagraph.last_update[self.uid]
-                    < self.config.neuron.epoch_length
-                ):
-                    # Wait before checking again.
-                    time.sleep(1)
+                while(True):
+                    time.sleep(5)
+                    job_info= self.request_job()
+                    if job_info:
+                        bt.logging.info(f"⏪ Job received for {self.uid}: {job_info}")
+                        train_res = self.train_genome(job_info)
+                        self.finish_job(self.uid, job_info['Genome_String'], train_res)
+                        # print(f"Sleeping for {wait_time} seconds before finishing the job...")
+                        time.sleep(15)  # Sleep for the specified wait time before finishing the job
+                    else:
+                        bt.logging.info(f"ℹ️ No jobs are available from GenoMaster!")
 
-                    # Check if we should exit.
-                    if self.should_exit:
-                        break
+
 
                 # Sync metagraph and potentially set weights.
                 self.sync()

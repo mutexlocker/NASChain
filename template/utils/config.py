@@ -119,6 +119,20 @@ def add_args(cls, parser):
         default="",
     )
 
+def add_genomaster_args(cls, parser):
+
+    parser.add_argument(
+        "--genomaster.ip",
+        type=str,
+        help="Ip address of genomaster",
+        default="",
+    )
+    parser.add_argument(
+        "--genomaster.port",
+        type=str,
+        help="Port number of genomaster",
+        default="",
+    )
 
 def add_miner_args(cls, parser):
     """Add miner specific arguments to the parser."""
