@@ -78,7 +78,7 @@ class BaseMinerNeuron(BaseNeuron):
         self.lock = asyncio.Lock()
     
     def request_job(self):
-        bt.logging.info(f" ⏩ Requsting Job from Genomaster: {self.config.genomaster.ip}:{self.config.genomaster.port}")
+        bt.logging.info(f"⏩ Requsting Job from Genomaster: {self.config.genomaster.ip}:{self.config.genomaster.port}")
         try:
             # Make a POST request to the server to request a job
             response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/request_job', json={'user_name': self.uid})
@@ -89,20 +89,23 @@ class BaseMinerNeuron(BaseNeuron):
         except requests.ConnectionError as e:
                 bt.logging.error(f'Failed to connect to Genomaster server: {e}')
 
-    def finish_job(self, user_name, genome_string, genome_results):
+    def finish_job(self, user_name, genome_string, genome_results, attempts):
         # Make a POST request to the server to mark a job as finished
-        try:
-            response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/finish_job', json={
-                'user_name': user_name,
-                'genome_string': genome_string,
-                'response_values': genome_results
-            })
-            if response.status_code == 200:
-                bt.logging.info(f" ✅ Job {genome_string} results submitted by {user_name}. Responses: {genome_results}")
-            else:
-                bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}")
-        except Exception as e:
-                bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}')
+        for i in range(attempts):
+            try:
+                response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/finish_job', json={
+                    'user_name': user_name,
+                    'genome_string': genome_string,
+                    'response_values': genome_results
+                })
+                if response.status_code == 200:
+                    bt.logging.info(f"✅ Job {genome_string} results submitted by {user_name}. Responses: {genome_results}")
+                    return
+                else:
+                    bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}")
+            except Exception as e:
+                    bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}, retrying in 15 seconds..')
+                    time.sleep(15)
 
 
     def train_genome(self,config):
@@ -161,7 +164,7 @@ class BaseMinerNeuron(BaseNeuron):
                     if job_info:
                         bt.logging.info(f"⏪ Job received for {self.uid}: {job_info}")
                         train_res = self.train_genome(job_info)
-                        self.finish_job(self.uid, job_info['Genome_String'], train_res)
+                        self.finish_job(self.uid, job_info['Genome_String'], train_res, 3)
                         # print(f"Sleeping for {wait_time} seconds before finishing the job...")
                         time.sleep(15)  # Sleep for the specified wait time before finishing the job
                     else:
