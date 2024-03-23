@@ -22,7 +22,8 @@ import time
 
 # Bittensor
 import bittensor as bt
-
+import sys
+sys.path.insert(0, '.')
 # Bittensor Validator Template:
 import template
 from template.validator import forward
@@ -66,4 +67,4 @@ if __name__ == "__main__":
     with Validator() as validator:
         while True:
             bt.logging.info("Validator running...", time.time())
-            time.sleep(5)
+            time.sleep(30)

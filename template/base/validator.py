@@ -20,6 +20,7 @@
 
 import copy
 import torch
+import time
 import asyncio
 import argparse
 import threading
@@ -31,6 +32,7 @@ from traceback import print_exception
 from template.base.neuron import BaseNeuron
 from template.mock import MockDendrite
 from template.utils.config import add_validator_args
+from template.utils.config import add_genomaster_args
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -44,6 +46,7 @@ class BaseValidatorNeuron(BaseNeuron):
     def add_args(cls, parser: argparse.ArgumentParser):
         super().add_args(parser)
         add_validator_args(cls, parser)
+        add_genomaster_args(cls, parser)
 
     def __init__(self, config=None):
         super().__init__(config=config)
@@ -150,9 +153,9 @@ class BaseValidatorNeuron(BaseNeuron):
                 # Check if we should exit.
                 if self.should_exit:
                     break
-
+                time.sleep(15)
                 # Sync metagraph and potentially set weights.
-                self.sync()
+                #self.sync()
 
                 self.step += 1
 

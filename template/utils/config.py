@@ -134,6 +134,13 @@ def add_genomaster_args(cls, parser):
         default="",
     )
 
+    parser.add_argument(
+        "--genomaster.valid.endpoint",
+        type=str,
+        help="Port number of genomaster",
+        default="/handle_valid_request",
+    )
+
 def add_miner_args(cls, parser):
     """Add miner specific arguments to the parser."""
 
