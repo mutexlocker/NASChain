@@ -30,6 +30,7 @@
 Neural Architecture Search (NAS) is a critical field in machine learning that focuses on automating the design of artificial neural network architectures. As computational models become increasingly complex and computationally expensive, the significance of NAS grows. The primary goal is to identify the optimal model that not only maximizes accuracy for a given use case but also minimizes the number of parameters and the computational cost, measured in Floating Point Operations (FLOPs). However, performing such searches can be immensely resource-intensive, often requiring days or weeks of computation on hundreds of GPUs to find an optimal model.
 
 NASChain aims to address these challenges by leveraging the power of the Bittensor network and an innovative incentive mechanism. This approach distributes NAS tasks among participants (referred to as miners), thereby decentralizing the computational effort and potentially reducing the time and resources required for finding efficient and effective neural architectures.
+
 ---
 ## How it works
 
