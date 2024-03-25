@@ -24,9 +24,9 @@ import traceback
 import sys
 import bittensor as bt
 
-from template.base.neuron import BaseNeuron
-from template.utils.config import add_miner_args
-from template.utils.config import add_genomaster_args
+from src.base.neuron import BaseNeuron
+from src.utils.config import add_miner_args
+from src.utils.config import add_genomaster_args
 sys.path.insert(0, 'nsga-net/')
 from search import train_search
 
@@ -102,7 +102,7 @@ class BaseMinerNeuron(BaseNeuron):
                     bt.logging.info(f"✅ Job {genome_string} results submitted by {user_name}. Responses: {genome_results}")
                     return
                 else:
-                    bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}")
+                    bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}, Reason = {response.message}")
             except Exception as e:
                     bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}, retrying in 15 seconds..')
                     time.sleep(15)

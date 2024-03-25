@@ -19,9 +19,9 @@
 
 import bittensor as bt
 
-from template.protocol import Dummy
-from template.validator.reward import get_rewards
-from template.utils.uids import get_random_uids
+from src.protocol import Dummy
+from src.validator.reward import get_rewards
+from src.utils.uids import get_random_uids
 import requests
 import pandas as pd
 

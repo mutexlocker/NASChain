@@ -25,11 +25,11 @@ import bittensor as bt
 import sys
 sys.path.insert(0, '.')
 # Bittensor Validator Template:
-import template
-from template.validator import forward
+import src
+from src.validator import forward
 
 # import base validator class which takes care of most of the boilerplate
-from template.base.validator import BaseValidatorNeuron
+from src.base.validator import BaseValidatorNeuron
 
 
 class Validator(BaseValidatorNeuron):
