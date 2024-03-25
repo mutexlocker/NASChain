@@ -16,6 +16,7 @@
 
 - [Introduction](#introduction)
 - [How It Works](#how-it-works)
+- [Hardware Requirements](#hardware-requirements)
 - [Installation](#installation)
   - [Setting Up](#setting-up)
   - [Running the Miner](#running-the-miner)
@@ -48,6 +49,16 @@ NASChain aims to address these challenges by leveraging the power of the Bittens
 <div align="center">
 <img src="imgs/how-it-works.png" alt="Optional Image Description" width="750" height="400">
 </div>
+
+---
+
+## Hardware Requirements
+
+### Miners:
+- **GPU**: Nvidia GPU with at least 16GB of memory. Note that 8GB graphics cards might work in some use cases, but their compatibility and performance are not guaranteed.
+
+### Validators:
+- **CPU**: Machines with only CPU are sufficient for validators as they do not undergo intensive computational loads.
 
 ---
 ## Installation
