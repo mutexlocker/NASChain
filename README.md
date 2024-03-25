@@ -32,7 +32,7 @@ NASChain aims to address these challenges by leveraging the power of the Bittens
 ---
 ## How it works
 
-1. **Genetic Algorithm-Based NAS:** NASChain uses genetic algorithms for optimizing neural networks, where each network is a binary-encoded "genome". This allows for the systematic exploration of architectural possibilities.
+1. **Genetic Algorithm-Based NAS:** NASChain uses genetic algorithm for optimizing neural networks, where each network is a binary-encoded "genome". This allows for the systematic exploration of architectural possibilities.
 
 2. **Optimization Process:** Through mutations and evaluations, NASChain refines these genomes to improve performance, aiming for the optimal blend of accuracy and efficiency across generations.
 
