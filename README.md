@@ -1,91 +1,111 @@
 <div align="center">
 
-# **Bittensor Subnet Template** <!-- omit in toc -->
-[![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/bittensor)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
-
+# **NASChain** <!-- omit in toc -->
 ---
+<img src="imgs/naschain.png" alt="Optional Image Description" width="700" height="300">
 
-## The Incentivized Internet <!-- omit in toc -->
+
+
+## Nerual Architure serach on Bittensor Netowrk  <!-- omit in toc -->
 
 [Discord](https://discord.gg/bittensor) • [Network](https://taostats.io/) • [Research](https://bittensor.com/whitepaper)
 </div>
 
 ---
-- [Quickstarter template](#quickstarter-template)
+## Table of Contents
+
 - [Introduction](#introduction)
-  - [Example](#example)
+- [How It Works](#how-it-works)
 - [Installation](#installation)
-  - [Before you proceed](#before-you-proceed)
-  - [Install](#install)
-- [Writing your own incentive mechanism](#writing-your-own-incentive-mechanism)
-- [Writing your own subnet API](#writing-your-own-subnet-api)
-- [Subnet Links](#subnet-links)
-- [License](#license)
-
----
-## Quickstarter template
-
-This template contains all the required installation instructions, scripts, and files and functions for:
-- Building Bittensor subnets.
-- Creating custom incentive mechanisms and running these mechanisms on the subnets. 
-
-In order to simplify the building of subnets, this template abstracts away the complexity of the underlying blockchain and other boilerplate code. While the default behavior of the template is sufficient for a simple subnet, you should customize the template in order to meet your specific requirements.
+  - [Setting Up](#setting-up)
+  - [Running the Miner](#running-the-miner)
+  - [Running the Validator](#running-the-validator)
+- [Self-Improvement Mechanism](#self-improvement-mechanism)
+- [Validation and Incentive Mechanism](#validation-and-incentive-mechanism)
+- [Roadmap](#roadmap)
 ---
 
 ## Introduction
 
-**IMPORTANT**: If you are new to Bittensor subnets, read this section before proceeding to [Installation](#installation) section. 
+Neural Architecture Search (NAS) is a critical field in machine learning that focuses on automating the design of artificial neural network architectures. As computational models become increasingly complex and computationally expensive, the significance of NAS grows. The primary goal is to identify the optimal model that not only maximizes accuracy for a given use case but also minimizes the number of parameters and the computational cost, measured in Floating Point Operations (FLOPs). However, performing such searches can be immensely resource-intensive, often requiring days or weeks of computation on hundreds of GPUs to find an optimal model.
 
-The Bittensor blockchain hosts multiple self-contained incentive mechanisms called **subnets**. Subnets are playing fields in which:
-- Subnet miners who produce value, and
-- Subnet validators who produce consensus
+NASChain aims to address these challenges by leveraging the power of the Bittensor network and an innovative incentive mechanism. This approach distributes NAS tasks among participants (referred to as miners), thereby decentralizing the computational effort and potentially reducing the time and resources required for finding efficient and effective neural architectures.
+---
+## How it works
 
-determine together the proper distribution of TAO for the purpose of incentivizing the creation of value, i.e., generating digital commodities, such as intelligence or data. 
+1. **Genetic Algorithm-Based NAS:** NASChain uses genetic algorithms for optimizing neural networks, where each network is a binary-encoded "genome". This allows for the systematic exploration of architectural possibilities.
 
-Each subnet consists of:
-- Subnet miners and subnet validators.
-- A protocol using which the subnet miners and subnet validators interact with one another. This protocol is part of the incentive mechanism.
-- The Bittensor API using which the subnet miners and subnet validators interact with Bittensor's onchain consensus engine [Yuma Consensus](https://bittensor.com/documentation/validating/yuma-consensus). The Yuma Consensus is designed to drive these actors: subnet validators and subnet miners, into agreement on who is creating value and what that value is worth. 
+2. **Optimization Process:** Through mutations and evaluations, NASChain refines these genomes to improve performance, aiming for the optimal blend of accuracy and efficiency across generations.
 
-This starter template is split into three primary files. To write your own incentive mechanism, you should edit these files. These files are:
-1. `template/protocol.py`: Contains the definition of the protocol used by subnet miners and subnet validators.
-2. `neurons/miner.py`: Script that defines the subnet miner's behavior, i.e., how the subnet miner responds to requests from subnet validators.
-3. `neurons/validator.py`: This script defines the subnet validator's behavior, i.e., how the subnet validator requests information from the subnet miners and determines the scores.
+3. **Distributed Training:** Leveraging the Bittensor network, NASChain decentralizes the intensive computational process, enabling parallel genome training by a network of miners.
 
-### Example
+4. **Blockchain Integration:** This ensures security and transparency, with miners rewarded for contributing computational resources towards training and evaluating network models.
 
-The Bittensor Subnet 1 for Text Prompting is built using this template. See [Bittensor Text-Prompting](https://github.com/opentensor/text-prompting) for how to configure the files and how to add monitoring and telemetry and support multiple miner types. Also see this Subnet 1 in action on [Taostats](https://taostats.io/subnets/netuid-1/) explorer.
+5. **Outcome:** The process yields optimal neural architectures that balance high accuracy with low computational demands, achieved more efficiently through distributed efforts.
+
+> **The algorithm in NASChain utilizes the NSGA approach for optimization. For more insights, refer to the following resources: [paper](https://arxiv.org/abs/1810.03522) | [code](https://github.com/ianwhale/nsga-net).**
+<div align="center">
+<img src="imgs/how-it-works.png" alt="Optional Image Description" width="750" height="400">
+</div>
 
 ---
-
 ## Installation
 
-### Before you proceed
-Before you proceed with the installation of the subnet, note the following: 
+We recommend using virtual environments such as Conda to manage and isolate your project dependencies.
 
-- Use these instructions to run your subnet locally for your development and testing, or on Bittensor testnet or on Bittensor mainnet. 
-- **IMPORTANT**: We **strongly recommend** that you first run your subnet locally and complete your development and testing before running the subnet on Bittensor testnet. Furthermore, make sure that you next run your subnet on Bittensor testnet before running it on the Bittensor mainnet.
-- You can run your subnet either as a subnet owner, or as a subnet validator or as a subnet miner. 
-- **IMPORTANT:** Make sure you are aware of the minimum compute requirements for your subnet. See the [Minimum compute YAML configuration](./min_compute.yml).
-- Note that installation instructions differ based on your situation: For example, installing for local development and testing will require a few additional steps compared to installing for testnet. Similarly, installation instructions differ for a subnet owner vs a validator or a miner. 
+- Ensure you have Python >= 3.10 installed on your system.
+- Both Miner and Validator code is only tested on Linux OS.
+- It is advised to use a virtual environment to avoid conflicts with other projects or system-wide packages.
 
-### Install
+### Setting Up
 
-- **Running locally**: Follow the step-by-step instructions described in this section: [Running Subnet Locally](./docs/running_on_staging.md).
-- **Running on Bittensor testnet**: Follow the step-by-step instructions described in this section: [Running on the Test Network](./docs/running_on_testnet.md).
-- **Running on Bittensor mainnet**: Follow the step-by-step instructions described in this section: [Running on the Main Network](./docs/running_on_mainnet.md).
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/nimaaghli/NASChain]
+2. Navigate to the project directory:
+    ```bash
+    cd NASChain
+3. if setting up virtual enviuuement:
+    - if using conda:
+        ```bash
+        conda create --name myenv python=3.10
+        conda activate myenv
+    - if suing venv
+        ```bash
+        python -m venv env
+        source env/bin/activate
+4. Install the required packages:
+    ```bash
+    pip install -r requirements.txt
+
+5. Running the miner :
+    ```bash
+    python neurons/miner.py --netuid <TBD>  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>   --genomaster.ip <TBD> --genomaster.port <TBD>
+    
+> **Make sure your ports for DHT and Axon are accessible from outside by setting up port forwarding.**
+ 
+5. Running the miner :
+    ```bash
+    python neurons/validator.py --netuid <TBD>  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip <TBD> --genomaster.port <TBD>
+---
+## Self-improvement mechanism
+The subnet's self-improvement mechanism, orchestrated by the Genomaster, initially assigns training jobs fairly across the network's neurons based on the current subnetwork metagraph. However, the process evolves dynamically based on performance:
+
+1. **Early Completion Reassignment:** If a neuron completes its assigned jobs more quickly than its peers, it is deemed more efficient. Consequently, it is granted additional jobs that remain unfinished, particularly those initially assigned to slower-performing miners. This ensures that active, high-performance neurons are utilized to their fullest capacity without idle time.
+
+2. **Reassignment due to Delay:** Conversely, if a miner is significantly lagging behind the average job completion time of the network, indicating underperformance or less capable hardware, the Genomaster intervenes. The underperforming miner's pending job is reassigned to a neuron that has already completed its workload and is ready for more. This intervention is carefully balanced to ensure fairness while optimizing overall network efficiency.
+
+> **By implementing these strategies, the competition within the subnet ensures continuous improvement in the quality and speed of computations. This adaptive mechanism aims to perpetually enhance the computational quality available in the network, ensuring that resources are not just allocated efficiently, but are also in constant refinement to leverage the fastest and most capable GPUs. This dynamic optimization helps maintain the subnet's competitive edge, ensuring it continuously evolves and improves in line with technological advancements and network demands.**
+
+> **Currently, the Genomaster assigns only one job per miner. This will change in future releases, where miners can earn more rewards by acquiring as many jobs as their multiple GPUs can handle, resulting in better rewards and enhanced self-improvement of the subnetwork. Ultimately, miners can connect an entire GPU cluster to their neuron, creating what we refer to as a SUBSUBnetwork.**
 
 ---
 
-## Incentive mechanism
+## Validation and Incentive mechanism
 
+Every miner returns the response to the Genomaster in an array of size three, such as [accuracy, parameters, FLOPs]. To ensure the results are legitimate from the miners, the Genomaster will assign each job to three different miners randomly, assuming that no miner can be in the job batch more than once (the subnet will not function if there are fewer than three miners in the network). Once responses are returned from all miners of the job batch, they will be delivered to validators upon request. To mark the three results as legitimate, they should be in agreement. Below, we describe the validation method in more detail.
 
-# User Response Evaluation and Reward System
-
-This document outlines the methodology and implementation details of the User Response Evaluation and Reward System. This system is designed for evaluating and rewarding job performance based on user responses, considering both agreement accuracy and the total number of jobs completed.
-
-## Batch Definition and Structure
+### Batch Definition and Structure
 
 **Batches**: Defined as `B = {b_1, b_2, ..., b_n}`, each batch `b_i` corresponds to evaluations from different users for the same job.
 
@@ -93,8 +113,6 @@ This document outlines the methodology and implementation details of the User Re
 - `acc_j`: Accuracy reported by the j-th user.
 - `params_j`: Model parameters reported by the j-th user.
 - `flops_j`: Floating-point operations (FLOPs) reported by the j-th user.
-
-## Evaluation Criteria
 
 ### Agreement Checks
 
@@ -106,227 +124,49 @@ This document outlines the methodology and implementation details of the User Re
 
 - The total contribution of a user is also evaluated based on the total number of jobs they have completed, fostering not only accuracy and consensus but also productivity.
 
-## Scoring System
+### Scoring System
 
-### Level 1: Agreement-Based Scoring
+#### Level 1: Agreement-Based Scoring
 
 - Users receive points for each job where their response is part of a consensus within the batch. The system evaluates and assigns points based on pairwise agreements.
 
-### Level 2: Productivity-Based Scoring
+#### Level 2: Productivity-Based Scoring
 
 - Users are additionally scored based on the total number of jobs they have completed. This encourages not only quality in terms of agreement but also quantity, enhancing overall productivity.
 
-## Score Normalization and Finalization
+> **The results submitted by miners are expected to show agreement unless there has been tampering with the mining code, especially regarding training parameters such as weight initialization seed, number of training epochs, or batch size. The three-batch agreement system is designed to ensure that all miners use exactly the configuration dictated by the GenoMaster, to ensure that the results returned are reliable and correct.**
 
-- **Total Points Calculation**: Sum all points awarded across all users for both agreement-based and productivity-based contributions.
-- **Score Normalization**: Normalize each user's total score by dividing by the overall points awarded, ensuring fairness and reflecting each user's proportional contribution to the collective tasks.
-
-__Note__
-
-The results submitted by miners are expected to show agreement unless there has been tampering with the mining code, especially regarding training parameters such as weight initialization seed, number of training epochs, or batch size. The three-batch agreement system is designed to ensure that all miners use exactly the configuration dictated by the GenoMaster, to ensure that the results returned are reliable and correct.
-
-In terms of productivity and constant improvement, the system will reward faster miners, as they will be able to finish more jobs during the training phase of each generation. This encourages not only adherence to specified configurations for consistency and accuracy but also efficiency and speed in completing tasks.
+> **In terms of productivity and constant improvement, the system will reward faster miners, as they will be able to finish more jobs during the training phase of each generation. This encourages not only adherence to specified configurations for consistency and accuracy but also efficiency and speed in completing tasks.**
 
 ---
 
-# Writing your own subnet API
-To leverage the abstract `SubnetsAPI` in Bittensor, you can implement a standardized interface. This interface is used to interact with the Bittensor network and can is used by a client to interact with the subnet through its exposed axons.
+## Roadmap
 
-What does Bittensor communication entail? Typically two processes, (1) preparing data for transit (creating and filling `synapse`s) and (2), processing the responses received from the `axon`(s).
+Our development journey is planned as follows, to enhance the functionality and reach of our platform:
 
-This protocol uses a handler registry system to associate bespoke interfaces for subnets by implementing two simple abstract functions:
-- `prepare_synapse`
-- `process_responses`
+1. **Testnet Launch**: Initiate debugging and error fixing with the help of miner collaborators to ensure a stable environment.
 
-These can be implemented as extensions of the generic `SubnetsAPI` interface.  E.g.:
+2. **Successful Search on Benchmark Datasets**:
+   - Conduct successful searches on common datasets such as CIFAR-10 and CIFAR-100.
+   - Share results and findings with the community to foster collaboration and improvement.
 
+3. **Expand Dataset Range**:
+   - Perform searches on larger datasets like ImageNet to test scalability and efficiency.
 
-This is abstract, generic, and takes(`*args`, `**kwargs`) for flexibility. See the extremely simple base class:
-```python
-class SubnetsAPI(ABC):
-    def __init__(self, wallet: "bt.wallet"):
-        self.wallet = wallet
-        self.dendrite = bt.dendrite(wallet=wallet)
+4. **Multi-GPU/Job Support**:
+   - Enable miners to leverage multiple GPUs, allowing for parallel processing and faster computations.
 
-    async def __call__(self, *args, **kwargs):
-        return await self.query_api(*args, **kwargs)
+5. **Disseminate Findings**:
+   - Publish findings and results in conferences to contribute to the scientific community and gain feedback.
 
-    @abstractmethod
-    def prepare_synapse(self, *args, **kwargs) -> Any:
-        """
-        Prepare the synapse-specific payload.
-        """
-        ...
+6. **Live Dashboard Website**:
+   - Develop a live dashboard website to display GenoMaster stats, jobs, and interactive visualizations of the genetic algorithm at work.
 
-    @abstractmethod
-    def process_responses(self, responses: List[Union["bt.Synapse", Any]]) -> Any:
-        """
-        Process the responses from the network.
-        """
-        ...
+7. **Frontend Website for Users**:
+   - Create a frontend website where customers can register, create a search task for their use case, upload their dataset, and obtain their optimal architecture from the subnetwork.
 
-```
-
-
-Here is a toy example:
-
-```python
-from bittensor.subnets import SubnetsAPI
-from MySubnet import MySynapse
-
-class MySynapseAPI(SubnetsAPI):
-    def __init__(self, wallet: "bt.wallet"):
-        super().__init__(wallet)
-        self.netuid = 99
-
-    def prepare_synapse(self, prompt: str) -> MySynapse:
-        # Do any preparatory work to fill the synapse
-        data = do_prompt_injection(prompt)
-
-        # Fill the synapse for transit
-        synapse = StoreUser(
-            messages=[data],
-        )
-        # Send it along
-        return synapse
-
-    def process_responses(self, responses: List[Union["bt.Synapse", Any]]) -> str:
-        # Look through the responses for information required by your application
-        for response in responses:
-            if response.dendrite.status_code != 200:
-                continue
-            # potentially apply post processing
-            result_data = postprocess_data_from_response(response)
-        # return data to the client
-        return result_data
-```
-
-You can use a subnet API to the registry by doing the following:
-1. Download and install the specific repo you want
-1. Import the appropriate API handler from bespoke subnets
-1. Make the query given the subnet specific API
-
-
-See a simplified example for subnet 21 (`FileTao` storage) below. See `examples/subnet21.py` file for a full implementation example to follow:
-
-```python
-
-# Subnet 21 Interface Example
-
-class StoreUserAPI(SubnetsAPI):
-    def __init__(self, wallet: "bt.wallet"):
-        super().__init__(wallet)
-        self.netuid = 21
-
-    def prepare_synapse(
-        self,
-        data: bytes,
-        encrypt=False,
-        ttl=60 * 60 * 24 * 30,
-        encoding="utf-8",
-    ) -> StoreUser:
-        data = bytes(data, encoding) if isinstance(data, str) else data
-        encrypted_data, encryption_payload = (
-            encrypt_data(data, self.wallet) if encrypt else (data, "{}")
-        )
-        expected_cid = generate_cid_string(encrypted_data)
-        encoded_data = base64.b64encode(encrypted_data)
-
-        synapse = StoreUser(
-            encrypted_data=encoded_data,
-            encryption_payload=encryption_payload,
-            ttl=ttl,
-        )
-
-        return synapse
-
-    def process_responses(
-        self, responses: List[Union["bt.Synapse", Any]]
-    ) -> str:
-        for response in responses:
-            if response.dendrite.status_code != 200:
-                continue
-            stored_cid = (
-                response.data_hash.decode("utf-8")
-                if isinstance(response.data_hash, bytes)
-                else response.data_hash
-            )
-            bt.logging.debug("received data CID: {}".format(stored_cid))
-            break
-
-        return stored_cid
-
-
-class RetrieveUserAPI(SubnetsAPI):
-    def __init__(self, wallet: "bt.wallet"):
-        super().__init__(wallet)
-        self.netuid = 21
-
-    def prepare_synapse(self, cid: str) -> RetrieveUser:
-        synapse = RetrieveUser(data_hash=cid)
-        return synapse
-
-    def process_responses(self, responses: List[Union["bt.Synapse", Any]]) -> bytes:
-        success = False
-        decrypted_data = b""
-        for response in responses:
-            if response.dendrite.status_code != 200:
-                continue
-            decrypted_data = decrypt_data_with_private_key(
-                encrypted_data,
-                response.encryption_payload,
-                bytes(self.wallet.coldkey.private_key.hex(), "utf-8"),
-            )
-        return data
-
- 
-Example usage of the `FileTao` interface, which can serve as an example for other subnets.
-
-# import the bespoke subnet API
-from storage import StoreUserAPI, RetrieveUserAPI
-
-wallet = bt.wallet(wallet="default", hotkey="default") # the wallet used for querying
-metagraph = bt.metagraph(netuid=21)  # metagraph of the subnet desired
-query_axons = metagraph.axons... # define custom logic to retrieve desired axons (e.g. validator set, specific miners, etc)
-
-# Store the data on subnet 21
-bt.logging.info(f"Initiating store_handler: {store_handler}")
-cid = await StoreUserAPI(
-      axons=query_axons, # the axons you wish to query
-      # Below: Parameters passed to `prepare_synapse` for this API subclass
-      data=b"Hello Bittensor!",
-      encrypt=False,
-      ttl=60 * 60 * 24 * 30, 
-      encoding="utf-8",
-      uid=None,
-)
-# The Content Identifier that corresponds to the stored data
-print(cid)
-> "bafkreifv6hp4o6bllj2nkdtzbq6uh7iia6bgqgd3aallvfhagym2s757v4
-
-# Now retrieve data from SN21 (storage)
-data = await RetrieveUserAPI(
-  axons=query_axons, # axons desired to query
-  cid=cid, # the content identifier to fetch the data
-)
-print(data)
-> b"Hello Bittensor!"
-```
-
-
-# Subnet Links
-In order to see real-world examples of subnets in-action, see the `subnet_links.py` document or access them from inside the `template` package by:
-```python
-import template
-template.SUBNET_LINKS
-[{'name': 'sn0', 'url': ''},
- {'name': 'sn1', 'url': 'https://github.com/opentensor/text-prompting/'},
- {'name': 'sn2', 'url': 'https://github.com/bittranslateio/bittranslate/'},
- {'name': 'sn3', 'url': 'https://github.com/gitphantomman/scraping_subnet/'},
- {'name': 'sn4', 'url': 'https://github.com/manifold-inc/targon/'},
-...
-]
-```
+This roadmap outlines our committed steps towards improving and expanding the capabilities of our network, aiming to provide a more comprehensive, user-friendly, and efficient service.
+---
 
 ## License
 This repository is licensed under the MIT License.
