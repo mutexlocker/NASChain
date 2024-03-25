@@ -1,12 +1,9 @@
 <div align="center">
 
-# **NASChain** <!-- omit in toc -->
+
 ---
 <img src="imgs/naschain.png" alt="Optional Image Description" width="700" height="300">
 
-
-
-## Nerual Architure serach on Bittensor Netowrk  <!-- omit in toc -->
 
 [Discord](https://discord.gg/bittensor) • [Network](https://taostats.io/) • [Research](https://bittensor.com/whitepaper)
 </div>
