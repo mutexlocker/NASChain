@@ -19,24 +19,60 @@
 
 import torch
 from typing import List
+import pandas as pd
+from collections import defaultdict
 
+def reward(df: pd.DataFrame , tolerance : int):
+    # Initialize the dictionary to store user scores and job counts
+    user_scores = defaultdict(lambda: {'points': 0, 'accepted_jobs': 0, 'rejected_jobs': 0})
 
-def reward(query: int, response: int) -> float:
-    """
-    Reward the miner response to the dummy request. This method returns a reward
-    value for the miner, which is used to update the miner's score.
+    # Process each job batch
+    for _, group in df.groupby('Genome_String'):
+        responses = group['Response'].tolist()
+        user_ids = group['Assigned_User'].tolist()
 
-    Returns:
-    - float: The reward value for the miner.
-    """
+        # Initialize agreement checks
+        agreements = [False] * len(user_ids)  # Default all to False
 
-    return 1.0 if response == query * 2 else 0
+        # Check pairwise agreement within tolerance for the first element and exact match for others
+        for i in range(len(responses)):
+            for j in range(i + 1, len(responses)):
+                # Check agreement between i and j
+                agree_first = abs(responses[i][0] - responses[j][0]) <= tolerance
+                agree_second = responses[i][1] == responses[j][1]
+                agree_third = responses[i][2] == responses[j][2]
 
+                # Update agreement status
+                if agree_first and agree_second and agree_third:
+                    agreements[i] = True
+                    agreements[j] = True
+
+        # Update scores based on agreement
+        for i, user_id in enumerate(user_ids):
+            if agreements[i]:
+                user_scores[user_id]['points'] += 1
+                user_scores[user_id]['accepted_jobs'] += 1
+            else:
+                user_scores[user_id]['rejected_jobs'] += 1
+
+    # Normalize the points and prepare the lists
+    total_points = sum(user['points'] for user in user_scores.values())
+    normalized_scores_list = []
+    user_ids_list = []
+
+    # Fill the lists with normalized scores and user IDs
+    for user_id, score in user_scores.items():
+        normalized_score = score['points'] / total_points if total_points > 0 else 0
+        normalized_scores_list.append(normalized_score)
+        user_ids_list.append(user_id)
+
+    # Return the three outputs
+    return normalized_scores_list, user_ids_list, user_scores
 
 def get_rewards(
     self,
     query: int,
-    responses: List[float],
+    responses_df: pd.DataFrame,
 ) -> torch.FloatTensor:
     """
     Returns a tensor of rewards for the given query and responses.
@@ -49,6 +85,9 @@ def get_rewards(
     - torch.FloatTensor: A tensor of rewards for the given query and responses.
     """
     # Get all the reward results by iteratively calling your reward() function.
-    return torch.FloatTensor(
-        [reward(query, response) for response in responses]
-    ).to(self.device)
+
+    rewards, uids, msgs = reward(responses_df,1)
+    return torch.FloatTensor(rewards).to(self.device), uids, msgs
+    # return torch.FloatTensor(
+    #     [reward(query, response) for response in responses]
+    # ).to(self.device)

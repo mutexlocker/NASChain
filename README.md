@@ -78,24 +78,55 @@ Before you proceed with the installation of the subnet, note the following:
 
 ---
 
-## Writing your own incentive mechanism
+## Incentive mechanism
 
-As described in [Quickstarter template](#quickstarter-template) section above, when you are ready to write your own incentive mechanism, update this template repository by editing the following files. The code in these files contains detailed documentation on how to update the template. Read the documentation in each of the files to understand how to update the template. There are multiple **TODO**s in each of the files identifying sections you should update. These files are:
-- `template/protocol.py`: Contains the definition of the wire-protocol used by miners and validators.
-- `neurons/miner.py`: Script that defines the miner's behavior, i.e., how the miner responds to requests from validators.
-- `neurons/validator.py`: This script defines the validator's behavior, i.e., how the validator requests information from the miners and determines the scores.
-- `template/forward.py`: Contains the definition of the validator's forward pass.
-- `template/reward.py`: Contains the definition of how validators reward miner responses.
 
-In addition to the above files, you should also update the following files:
-- `README.md`: This file contains the documentation for your project. Update this file to reflect your project's documentation.
-- `CONTRIBUTING.md`: This file contains the instructions for contributing to your project. Update this file to reflect your project's contribution guidelines.
-- `template/__init__.py`: This file contains the version of your project.
-- `setup.py`: This file contains the metadata about your project. Update this file to reflect your project's metadata.
-- `docs/`: This directory contains the documentation for your project. Update this directory to reflect your project's documentation.
+# User Response Evaluation and Reward System
+
+This document outlines the methodology and implementation details of the User Response Evaluation and Reward System. This system is designed for evaluating and rewarding job performance based on user responses, considering both agreement accuracy and the total number of jobs completed.
+
+## Batch Definition and Structure
+
+**Batches**: Defined as `B = {b_1, b_2, ..., b_n}`, each batch `b_i` corresponds to evaluations from different users for the same job.
+
+**Responses**: Each batch `b_i` contains responses structured as `[(acc_1, params_1, flops_1), (acc_2, params_2, flops_2), (acc_3, params_3, flops_3)]`:
+- `acc_j`: Accuracy reported by the j-th user.
+- `params_j`: Model parameters reported by the j-th user.
+- `flops_j`: Floating-point operations (FLOPs) reported by the j-th user.
+
+## Evaluation Criteria
+
+### Agreement Checks
+
+- **Accuracy Agreement**: Users' responses within a batch agree on accuracy if the absolute difference between their reported accuracies is within a specific tolerance level.
+- **Parameters and FLOPs Agreement**: Agreement on model parameters and FLOPs requires exact matches between users' responses.
+- **Overall Agreement**: Full agreement is considered when both the accuracy (within tolerance) and the exact match on model parameters and FLOPs are satisfied between any pair of responses within the batch.
+
+### Total Number of Jobs Finished
+
+- The total contribution of a user is also evaluated based on the total number of jobs they have completed, fostering not only accuracy and consensus but also productivity.
+
+## Scoring System
+
+### Level 1: Agreement-Based Scoring
+
+- Users receive points for each job where their response is part of a consensus within the batch. The system evaluates and assigns points based on pairwise agreements.
+
+### Level 2: Productivity-Based Scoring
+
+- Users are additionally scored based on the total number of jobs they have completed. This encourages not only quality in terms of agreement but also quantity, enhancing overall productivity.
+
+## Score Normalization and Finalization
+
+- **Total Points Calculation**: Sum all points awarded across all users for both agreement-based and productivity-based contributions.
+- **Score Normalization**: Normalize each user's total score by dividing by the overall points awarded, ensuring fairness and reflecting each user's proportional contribution to the collective tasks.
 
 __Note__
-The `template` directory should also be renamed to your project name.
+
+The results submitted by miners are expected to show agreement unless there has been tampering with the mining code, especially regarding training parameters such as weight initialization seed, number of training epochs, or batch size. The three-batch agreement system is designed to ensure that all miners use exactly the configuration dictated by the GenoMaster, to ensure that the results returned are reliable and correct.
+
+In terms of productivity and constant improvement, the system will reward faster miners, as they will be able to finish more jobs during the training phase of each generation. This encourages not only adherence to specified configurations for consistency and accuracy but also efficiency and speed in completing tasks.
+
 ---
 
 # Writing your own subnet API

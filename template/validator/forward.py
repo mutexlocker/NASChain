@@ -49,18 +49,33 @@ async def forward(self):
             # Convert the JSON response to a pandas DataFrame
             response_data = response.json()
             df = pd.DataFrame(response_data)
+            rewards, uids, msgs = get_rewards(self, query=self.step, responses_df=df)
+            self.update_scores(rewards, uids)
+            bt.logging.info("rewards")
+        #Todo: send rewward results back to miners
+        #     responses = await self.dendrite(
+        #     # Send the query to selected miner axons in the network.
+        #     axons=[self.metagraph.axons[uid] for uid in uids],
+        #     # Construct a dummy query. This simply contains a single integer.
+        #     synapse=Dummy(dummy_input=self.step),
+        #     # All responses have the deserialize function called on them before returning.
+        #     # You are encouraged to define your own deserialization function.
+        #     deserialize=True,
+        # )
+
+
 
             # Display the DataFrame
-            bt.logging.info("Response DataFrame:")
-            bt.logging.info(df)
+            # bt.logging.info("Response DataFrame:")
+            # bt.logging.info(df)
 
         elif response.status_code == 503:
             bt.logging.warning("⚠️ Server is currently busy, try again later.")
 
         else:
-            bt.logging.error("❌ Validation request failed.")
-            bt.logging.error("❌ Status code:", response.status_code)
-            bt.logging.error("❌ Message:", response.json().get('message'))
+            # bt.logging.error("❌ Validation request failed.")
+            # bt.logging.error("❌ Status code:", response.status_code)
+            bt.logging.error("❌ Validation request failed. Message:", response.json().get('message'))
 
     except Exception as e:
         bt.logging.error(f"❌ An error occurred: {e}")
@@ -69,6 +84,7 @@ async def forward(self):
 
 
 
+    
     # Send a GET request to the server
     # response = requests.get(url)
 
