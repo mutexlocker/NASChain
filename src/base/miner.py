@@ -106,7 +106,7 @@ class BaseMinerNeuron(BaseNeuron):
                     bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}, Reason = {error_message}")
             except Exception as e:
                     bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}, retrying in 15 seconds..')
-                    time.sleep(15)
+                    time.sleep(2)
 
 
     def train_genome(self,config):

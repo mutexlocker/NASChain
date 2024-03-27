@@ -93,7 +93,7 @@ We recommend using virtual environments such as Conda to manage and isolate your
     
 > **Make sure your ports for DHT and Axon are accessible from outside by setting up port forwarding.**
  
-5. Running the miner :
+5. Running the Validator :
     ```bash
     python neurons/validator.py --netuid <TBD>  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip <TBD> --genomaster.port <TBD>
 ---
@@ -173,6 +173,4 @@ Our development journey is planned as follows, to enhance the functionality and 
 
 7. **Frontend Website for Users**:
    - Create a frontend website where customers can register, create a search task for their use case, upload their dataset, and obtain their optimal architecture from the subnetwork.
-
-This roadmap outlines our committed steps towards improving and expanding the capabilities of our network, aiming to provide a more comprehensive, user-friendly, and efficient service.
 ---
