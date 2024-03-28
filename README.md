@@ -2,7 +2,7 @@
 
 
 ---
-<img src="imgs/naschain.png" alt="Optional Image Description" width="700" height="300">
+<img src="imgs/naschain_logo.png" alt="Optional Image Description" width="700" height="300">
 
 
 [Discord](https://discord.gg/bittensor) • [Network](https://taostats.io/) • [Research](https://bittensor.com/whitepaper)
@@ -44,7 +44,7 @@ NASChain aims to address these challenges by leveraging the power of the Bittens
 
 > **The algorithm in NASChain utilizes the NSGA approach for optimization. For more insights, refer to the following resources: [paper](https://arxiv.org/abs/1810.03522) | [code](https://github.com/ianwhale/nsga-net).**
 <div align="center">
-<img src="imgs/naschain_graph.png" alt="Optional Image Description" width="960" height="770">
+<img src="imgs/naschain.svg" alt="Optional Image Description" width="960" height="770">
 </div>
 
 ---
