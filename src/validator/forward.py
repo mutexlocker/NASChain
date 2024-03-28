@@ -41,17 +41,18 @@ async def forward(self):
         # Construct the full URL
         url = self.config.genomaster.ip + ':' + self.config.genomaster.port + self.config.genomaster.valid.endpoint
         response = requests.get(url)  # This is a synchronous call, consider using an async library if needed
-
         # Check the status code of the response
         if response.status_code == 200:
             bt.logging.info("✅ Validation request successful.")
-
             # Convert the JSON response to a pandas DataFrame
             response_data = response.json()
             df = pd.DataFrame(response_data)
-            rewards, uids, msgs = get_rewards(self, query=self.step, responses_df=df)
-            self.update_scores(rewards, uids)
-            bt.logging.info("rewards")
+            # check to seee if there is new batch of data for validation is ready in genomaster 
+            if self.valid_data_length != df.shape[0]:
+                bt.logging.info("✅ New batch arrived.. Updating Weights...")
+                rewards, uids, msgs = get_rewards(self, query=self.step, responses_df=df)
+                self.update_scores(rewards, uids)
+                self.valid_data_length = df.shape[0]
         #Todo: send rewward results back to miners
         #     responses = await self.dendrite(
         #     # Send the query to selected miner axons in the network.
