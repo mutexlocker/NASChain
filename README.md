@@ -44,7 +44,7 @@ NASChain aims to address these challenges by leveraging the power of the Bittens
 
 > **The algorithm in NASChain utilizes the NSGA approach for optimization. For more insights, refer to the following resources: [paper](https://arxiv.org/abs/1810.03522) | [code](https://github.com/ianwhale/nsga-net).**
 <div align="center">
-<img src="imgs/how-it-works.png" alt="Optional Image Description" width="750" height="400">
+<img src="imgs/naschain_graph.png" alt="Optional Image Description" width="750" height="400">
 </div>
 
 ---
