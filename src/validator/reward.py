@@ -22,7 +22,7 @@ from typing import List
 import pandas as pd
 from collections import defaultdict
 
-def reward(df: pd.DataFrame , tolerance : int):
+def reward(self, df: pd.DataFrame , tolerance : int):
     # Initialize the dictionary to store user scores and job counts
     user_scores = defaultdict(lambda: {'points': 0, 'accepted_jobs': 0, 'rejected_jobs': 0})
 
@@ -66,8 +66,13 @@ def reward(df: pd.DataFrame , tolerance : int):
         normalized_scores_list.append(normalized_score)
         user_ids_list.append(user_id)
 
-    # Return the three outputs
-    return normalized_scores_list, user_ids_list, user_scores
+    
+    
+    all_users_in_metagraoh = list(range(int(self.metagraph.n)))
+    all_scores_tensor = torch.zeros(int(self.metagraph.n))
+    # Scatter the scores to the corresponding user IDs
+    all_scores_tensor[user_ids_list] = torch.tensor(normalized_scores_list)
+    return all_scores_tensor, all_users_in_metagraoh, user_scores
 
 def get_rewards(
     self,
@@ -86,7 +91,7 @@ def get_rewards(
     """
     # Get all the reward results by iteratively calling your reward() function.
 
-    rewards, uids, msgs = reward(responses_df,1)
+    rewards, uids, msgs = reward(self, responses_df,1)
     return torch.FloatTensor(rewards).to(self.device), uids, msgs
     # return torch.FloatTensor(
     #     [reward(query, response) for response in responses]
