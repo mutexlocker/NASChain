@@ -23,7 +23,7 @@ import argparse
 import traceback
 import sys
 import bittensor as bt
-
+from requests.exceptions import ConnectionError, InvalidSchema, RequestException
 from src.base.neuron import BaseNeuron
 from src.utils.config import add_miner_args
 from src.utils.config import add_genomaster_args
@@ -86,8 +86,12 @@ class BaseMinerNeuron(BaseNeuron):
                 return response.json()  # Return the job details
             else:
                 return None  # No job available or user already has a job
-        except requests.ConnectionError as e:
-                bt.logging.error(f'Failed to connect to Genomaster server: {e}')
+        except ConnectionError as e:
+            bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}')
+        except InvalidSchema as e:
+            bt.logging.error(f'❌ Invalid URL schema: {e}')
+        except RequestException as e:
+            bt.logging.error(f'❌ Error during request to Genomaster server: {e}')
 
     def finish_job(self, user_name, genome_string, genome_results, attempts):
         # Make a POST request to the server to mark a job as finished
@@ -167,9 +171,9 @@ class BaseMinerNeuron(BaseNeuron):
                         train_res = self.train_genome(job_info)
                         self.finish_job(self.uid, job_info['Genome_String'], train_res, 3)
                         # print(f"Sleeping for {wait_time} seconds before finishing the job...")
-                        time.sleep(15)  # Sleep for the specified wait time before finishing the job
+                        time.sleep(30)  # Sleep for the specified wait time before finishing the job
                     else:
-                        bt.logging.info(f"ℹ️ No jobs are available from GenoMaster!")
+                        bt.logging.info(f"ℹ️ No jobs are available from GenoMaster! All jobs are finished, or the miner joined in the middle of the training epoch.")
 
 
 

@@ -66,15 +66,15 @@ We recommend using virtual environments such as Conda to manage and isolate your
 - Both Miner and Validator code is only tested on Linux OS.
 - It is advised to use a virtual environment to avoid conflicts with other projects or system-wide packages.
 
-### Setting Up
+### Runing Miner and Validator on Testnet(NetUID 123)
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/nimaaghli/NASChain]
+   git clone https://github.com/nimaaghli/NASChain
 2. Navigate to the project directory:
     ```bash
     cd NASChain
-3. if setting up virtual enviuuement:
+3. if setting up virtual enviuuement(Skip this step if running python on system level):
     - if using conda:
         ```bash
         conda create --name myenv python=3.10
@@ -89,13 +89,13 @@ We recommend using virtual environments such as Conda to manage and isolate your
 
 5. Running the miner :
     ```bash
-    python neurons/miner.py --netuid <TBD>  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>   --genomaster.ip <TBD> --genomaster.port <TBD>
+    python neurons/miner.py --netuid 123  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128 --genomaster.port 5000 --subtensor.network test
     
 > **Make sure your ports for DHT and Axon are accessible from outside by setting up port forwarding.**
  
 5. Running the Validator :
     ```bash
-    python neurons/validator.py --netuid <TBD>  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip <TBD> --genomaster.port <TBD>
+    python neurons/validator.py --netuid 123  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128  --genomaster.port 5000
 ---
 ## Self-improvement mechanism
 The subnet's self-improvement mechanism, orchestrated by the Genomaster, initially assigns training jobs fairly across the network's neurons based on the current subnetwork metagraph. However, the process evolves dynamically based on performance:
