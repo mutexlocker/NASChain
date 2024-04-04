@@ -97,7 +97,7 @@ We recommend using virtual environments such as Conda to manage and isolate your
     ```bash
     python neurons/validator.py --netuid 123  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128  --genomaster.port 5000
 ---
-## Self-improvement mechanism
+## Self-improvement mechanism(Job Watchdog)
 The subnet's self-improvement mechanism, orchestrated by the Genomaster, initially assigns training jobs fairly across the network's neurons based on the current subnetwork metagraph. However, the process evolves dynamically based on performance:
 
 1. **Early Completion Reassignment:** If a neuron completes its assigned jobs more quickly than its peers, it is deemed more efficient. Consequently, it is granted additional jobs that remain unfinished, particularly those initially assigned to slower-performing miners. This ensures that active, high-performance neurons are utilized to their fullest capacity without idle time.
@@ -114,22 +114,28 @@ The subnet's self-improvement mechanism, orchestrated by the Genomaster, initial
 
 Every miner returns the response to the Genomaster in an array of size three, such as [accuracy, parameters, FLOPs]. To ensure the results are legitimate from the miners, the Genomaster will assign each job to three different miners randomly, assuming that no miner can be in the job batch more than once (the subnet will not function if there are fewer than three miners in the network). Once responses are returned from all miners of the job batch, they will be delivered to validators upon request. To mark the three results as legitimate, they should be in agreement. Below, we describe the validation method in more detail.
 
-### Batch Definition and Structure
+### Agreement-Based PoW(Proof of Work) Scoring
 
-**Batches**: Defined as `B = {b_1, b_2, ..., b_n}`, each batch `b_i` corresponds to evaluations from different users for the same job.
+1.**Batches**: Defined as `B = {b_1, b_2, ..., b_n}`, each batch `b_i` corresponds to evaluations from different users for the same job.
 
-**Responses**: Each batch `b_i` contains responses structured as `[(acc_1, params_1, flops_1), (acc_2, params_2, flops_2), (acc_3, params_3, flops_3)]`:
-- `acc_j`: Accuracy reported by the j-th user.
-- `params_j`: Model parameters reported by the j-th user.
-- `flops_j`: Floating-point operations (FLOPs) reported by the j-th user.
+2.**Distribution**:    
+  - Each unique genome training task is assigned to three different miners randomly, ensuring that the same genome is not assigned to the same miner more than once.
+  - This set of three miners constitutes a single job batch `b_i`.
+  
+3.**Responses**: Upon completion of their tasks, each miner submits their results as an array of three values `[M_A, M_P, M_F]`, corresponding to the accuracy (A) of the genome training, the number of parameters (P) in the genome model, and the number of FLOPs (F) in the genome model, respectively.
 
-### Agreement Checks
+4.**Consensus**
+The validator collects the results into a 3x3 matrix, where each row represents the results from a single miner.
+The validation criteria are as follows:
+  - Accuracy (A): The accuracy values should be within a tolerance of ±1%.
+  - Parameters (P) and FLOPs (F): These values must be exactly the same across all miners.
 
-- **Accuracy Agreement**: Users' responses within a batch agree on accuracy if the absolute difference between their reported accuracies is within a specific tolerance level.
-- **Parameters and FLOPs Agreement**: Agreement on model parameters and FLOPs requires exact matches between users' responses.
-- **Overall Agreement**: Full agreement is considered when both the accuracy (within tolerance) and the exact match on model parameters and FLOPs are satisfied between any pair of responses within the batch.
+5.**Reward Allocation**
+  - If all three miners agree on all three metrics according to the validation criteria, each miner receives points.
+  - If only two miners' results are consistent with each other and meet the validation criteria, those two miners receive points, and the third does not.
+  - If all three miners disagree (i.e., their results do not meet the validation criteria), no points are awarded, and the job batch is rejected by the system (referred to as "GenoMaster").
 
-### Total Number of Jobs Finished
+### Total Number of Jobs Finished in a generation(level 2)(Todo:Fix this)
 
 - The total contribution of a user is also evaluated based on the total number of jobs they have completed, fostering not only accuracy and consensus but also productivity.
 
