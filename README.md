@@ -117,9 +117,11 @@ Every miner returns the response to the Genomaster in an array of size three, su
 ### Level 1: Agreement-Based PoW(Proof of Work) Scoring
 
 1.**Job Batches**: Defined as `B = {b_1, b_2, ..., b_n}`, each batch `b_i` corresponds to evaluations from different users for the same job.
+
 <div align="center">
-<img src="imgs/pow.svg" alt="Optional Image Description" width="960" height="770">
+<img src="imgs/pow.svg" alt="Optional Image Description" width="800" height="400">
 </div>
+
 2.**Distribution**:    
   - Each unique genome training task is assigned to three different miners randomly, ensuring that the same genome is not assigned to the same miner more than once.
   - This set of three miners constitutes a single job batch `b_i`.
