@@ -25,7 +25,7 @@
 
 ## Introduction
 
-Neural Architecture Search (NAS) is a critical field in machine learning that focuses on automating the design of artificial neural network architectures. As computational models become increasingly complex and computationally expensive, the significance of NAS grows. The primary goal is to identify the optimal model that not only maximizes accuracy for a given use case but also minimizes the number of parameters and the computational cost, measured in Floating Point Operations (FLOPs). However, performing such searches can be immensely resource-intensive, often requiring days or weeks of computation on hundreds of GPUs to find an optimal model.
+Neural Architecture Search (NAS) is a critical field in machine learning that focuses on automating the design of artificial neural network architectures. As deep nerual network models become increasingly complex and computationally expensive, the significance of NAS grows. The primary goal of NAS is to identify the optimal model that not only maximizes accuracy for a given use-case but also minimizes the number of parameters and the computational cost, measured in Floating Point Operations (FLOPs). However, performing such searches can be very resource-intensive, often requiring days or weeks of computation on hundreds of GPUs to find an optimal model.
 
 NASChain aims to address these challenges by leveraging the power of the Bittensor network and an innovative incentive mechanism. This approach distributes NAS tasks among participants (referred to as miners), thereby decentralizing the computational effort and potentially reducing the time and resources required for finding efficient and effective neural architectures.
 
@@ -47,6 +47,11 @@ NASChain aims to address these challenges by leveraging the power of the Bittens
 <img src="imgs/naschain.svg" alt="Optional Image Description" width="960" height="770">
 </div>
 
+### What is outcome of a NAS experimnet?
+Once the NAS run is finished for a specific use case (for example, a dataset for classification), a visualization tool and a post-processing script can extract dominant genomes from the list of all genomes (circles in the plot) trained across generations. Since the NAS problem is a multi-objective optimization issue, there will be more than one optimal solution to the NAS question. All those genomes that are dominant form a Pareto optimal frontier (represented by a red line in the graph). Genomes lying on the Pareto optimal frontier can be selected as the most optimal architectures for the use case, favoring either more accuracy, a lower number of parameters, or fewer FLOPs.
+<div align="center">
+<img src="imgs/plot.png" alt="Optional Image Description" width="1800" height="450">
+</div>
 ---
 
 ## Hardware Requirements
