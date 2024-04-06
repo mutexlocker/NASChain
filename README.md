@@ -50,7 +50,7 @@ NASChain aims to address these challenges by leveraging the power of the Bittens
 ### What is outcome of a NAS experimnet?
 Once the NAS run is finished for a specific use case (for example, a dataset for classification), a visualization tool and a post-processing script can extract dominant genomes from the list of all genomes (circles in the plot) trained across generations. Since the NAS problem is a multi-objective optimization issue, there will be more than one optimal solution to the NAS question. All those genomes that are dominant form a Pareto optimal frontier (represented by a red line in the graph). Genomes lying on the Pareto optimal frontier can be selected as the most optimal architectures for the use case, favoring either more accuracy, a lower number of parameters, or fewer FLOPs.
 <div align="center">
-<img src="imgs/plot.png" alt="Optional Image Description" width="1800" height="450">
+<img src="imgs/plot.png" alt="Optional Image Description" width="800" height="300">
 </div>
 ---
 
