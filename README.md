@@ -84,7 +84,7 @@ We recommend using virtual environments such as Conda to manage and isolate your
         ```bash
         conda create --name myenv python=3.10
         conda activate myenv
-    - if suing venv
+    - if using venv
         ```bash
         python -m venv env
         source env/bin/activate
@@ -94,13 +94,13 @@ We recommend using virtual environments such as Conda to manage and isolate your
 
 5. Running the miner :
     ```bash
-    python neurons/miner.py --netuid 31  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128 --genomaster.port 5000
+    python neurons/miner.py --netuid 31  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128 --genomaster.port 5000
     
 > **Make sure your ports for DHT and Axon are accessible from outside by setting up port forwarding.**
  
 5. Running the Validator :
     ```bash
-    python neurons/validator.py --netuid 31  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128  --genomaster.port 5000
+    python neurons/validator.py --netuid 31  --wallet.name <wallet_name> --wallet.hotkey <wallet_name> --logging.debug --axon.port <your_sxon_port> --dht.port <your_dht_port> --dht.announce_ip <your_public_ip>  --genomaster.ip http://51.161.12.128  --genomaster.port 5000
 ---
 ## Self-improvement mechanism(Job Watchdog)
 The subnet's self-improvement mechanism, orchestrated by the Genomaster job watchdog, initially assigns training jobs fairly across the network's neurons based on the current subnetwork metagraph. However, the process evolves dynamically based on performance:
