@@ -345,13 +345,13 @@ class BaseValidatorNeuron(BaseNeuron):
     def save_state(self):
         """Saves the state of the validator to a file."""
         bt.logging.info("Saving validator state.")
-
         # Save the state of the validator to file.
         torch.save(
             {
                 "step": self.step,
                 "scores": self.scores,
                 "hotkeys": self.hotkeys,
+                "scores": self.scores,
             },
             self.config.neuron.full_path + "/state.pt",
         )
@@ -365,3 +365,5 @@ class BaseValidatorNeuron(BaseNeuron):
         self.step = state["step"]
         self.scores = state["scores"]
         self.hotkeys = state["hotkeys"]
+        self.scores = state["scores"]
+        

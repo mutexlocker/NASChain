@@ -63,15 +63,12 @@ async def forward(self):
         #     # You are encouraged to define your own deserialization function.
         #     deserialize=True,
         # )
-
-
-
             # Display the DataFrame
             # bt.logging.info("Response DataFrame:")
             # bt.logging.info(df)
 
         elif response.status_code == 503:
-            bt.logging.warning("⚠️ Server is currently busy, try again later.")
+            bt.logging.warning("⚠️ GenoMaster is currently busy, connections will be accepted soon.")
 
         else:
             # bt.logging.error("❌ Validation request failed.")
