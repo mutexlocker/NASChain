@@ -153,7 +153,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 # Check if we should exit.
                 if self.should_exit:
                     break
-                time.sleep(15)
+                time.sleep(45)
                 # Sync metagraph and potentially set weights.
                 self.sync()
 
