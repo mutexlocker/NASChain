@@ -68,12 +68,12 @@ async def forward(self):
             # bt.logging.info(df)
 
         elif response.status_code == 503:
-            bt.logging.warning("⚠️ GenoMaster is currently busy, connections will be accepted soon.")
+            bt.logging.warning("⏳ GenoMaster is currently busy, connections will be accepted soon.")
 
         else:
             # bt.logging.error("❌ Validation request failed.")
             # bt.logging.error("❌ Status code:", response.status_code)
-            bt.logging.error("❌ Validation request failed. Message:", response.json().get('message'))
+            bt.logging.warning("⏳ Validation request not complete. Message:", response.json().get('message'))
 
     except Exception as e:
         bt.logging.error(f"❌ An error occurred: {e}")
