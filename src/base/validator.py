@@ -357,13 +357,20 @@ class BaseValidatorNeuron(BaseNeuron):
         )
 
     def load_state(self):
-        """Loads the state of the validator from a file."""
-        bt.logging.info("Loading validator state.")
+        try:
+            bt.logging.info("Loading validator state.")
 
-        # Load the state of the validator from file.
-        state = torch.load(self.config.neuron.full_path + "/state.pt")
-        self.step = state["step"]
-        self.scores = state["scores"]
-        self.hotkeys = state["hotkeys"]
-        self.scores = state["scores"]
+            # Attempt to load the state of the validator from file
+            state_path = self.config.neuron.full_path + "/state.pt"
+            state = torch.load(state_path)
+
+            # Update the validator's attributes with the loaded state
+            self.step = state.get("step")
+            self.scores = state.get("scores")
+            self.hotkeys = state.get("hotkeys")
+
+        except FileNotFoundError:
+            bt.logging.warning(f"State file not found at {state_path}. State does not exist, perhaps running validator for the first time.")
+        except Exception as e:
+            bt.logging.error(f"An error occurred while loading the state: {e}")
         
