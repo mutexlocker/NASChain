@@ -140,6 +140,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         # Check that validator is registered on the network.
         self.sync()
+        self.resync_metagraph()
 
         bt.logging.info(f"Validator starting at block: {self.block}")
 
@@ -157,6 +158,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 time.sleep(60)
                 # Sync metagraph and potentially set weights.
                 self.sync()
+                self.resync_metagraph()
 
                 self.step += 1
 
