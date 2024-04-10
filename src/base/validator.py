@@ -69,6 +69,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         # Init sync with the network. Updates the metagraph.
         self.sync()
+        self.resync_metagraph()
 
         # Serve axon to enable external connections.
         if not self.config.neuron.axon_off:
@@ -153,7 +154,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 # Check if we should exit.
                 if self.should_exit:
                     break
-                time.sleep(45)
+                time.sleep(60)
                 # Sync metagraph and potentially set weights.
                 self.sync()
 
@@ -368,6 +369,7 @@ class BaseValidatorNeuron(BaseNeuron):
             self.step = state.get("step")
             self.scores = state.get("scores")
             self.hotkeys = state.get("hotkeys")
+            print(self.scores)
 
         except FileNotFoundError:
             bt.logging.warning(f"State file not found at {state_path}. State does not exist, perhaps running validator for the first time.")
