@@ -130,10 +130,10 @@ class BaseNeuron(ABC):
             self.set_weights()
             #save state when validator sets weights 
             # scores will be loaded if validator restes the code 
-            self.save_state() 
+            # self.save_state() 
 
         # Always save state.
-        #self.save_state()
+        self.save_state()
 
     def check_registered(self):
         # --- Check for registration.
