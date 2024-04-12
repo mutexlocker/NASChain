@@ -49,7 +49,7 @@ class Validator(BaseValidatorNeuron):
 
        
 
-    async def forward(self):
+    def forward(self):
         """
         Validator forward pass. Consists of:
         - Generating the query
@@ -59,7 +59,7 @@ class Validator(BaseValidatorNeuron):
         - Updating the scores
         """
         # TODO(developer): Rewrite this function based on your protocol definition.
-        return await forward(self)
+        return forward(self)
 
 
 # The main function parses the configuration and runs the validator.

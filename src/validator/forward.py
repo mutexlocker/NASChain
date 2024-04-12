@@ -29,7 +29,7 @@ import pandas as pd
 import requests
 import bittensor as bt  # Assuming this is the correct way to import bittensor in your context
 
-async def forward(self):
+def forward(self):
     """
     The forward function is called by the validator every time step.
     It is responsible for querying the network and scoring the responses.
