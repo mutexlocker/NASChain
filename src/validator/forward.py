@@ -82,9 +82,9 @@ async def forward(self):
     except requests.exceptions.Timeout as errt:
         bt.logging.error(f"❌ Timeout Error: {errt}")
     except requests.exceptions.RequestException as err:
-        bt.logging.error(f"❌ bt.logging.error(f"Error: {err}")
+        bt.logging.error(f"❌ RequestException : {err}")
     except Exception as e:
-        bt.logging.error(f"❌ An error occurred: {e}")
+        bt.logging.error(f"❌ An error occurred in forward: {e}")
         # Optionally, print the traceback if you need more details
  
 
