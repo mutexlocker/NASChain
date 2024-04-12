@@ -74,7 +74,15 @@ async def forward(self):
             # bt.logging.error("❌ Validation request failed.")
             # bt.logging.error("❌ Status code:", response.status_code)
             bt.logging.warning("⏳ Validation request not complete. Message:", response.json().get('message'))
-
+    
+    except requests.exceptions.HTTPError as errh:
+        bt.logging.error(f"❌ HTTP Error: {errh}")
+    except requests.exceptions.ConnectionError as errc:
+        bt.logging.error(f"❌ Error Connecting: {errc}")
+    except requests.exceptions.Timeout as errt:
+        bt.logging.error(f"❌ Timeout Error: {errt}")
+    except requests.exceptions.RequestException as err:
+        bt.logging.error(f"❌ bt.logging.error(f"Error: {err}")
     except Exception as e:
         bt.logging.error(f"❌ An error occurred: {e}")
         # Optionally, print the traceback if you need more details
