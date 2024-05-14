@@ -29,7 +29,7 @@ from src.utils.config import add_miner_args
 from src.utils.config import add_genomaster_args
 sys.path.insert(0, 'nsga-net/')
 from search import train_search
-
+import pynvml
 import requests
 
 
@@ -39,7 +39,7 @@ class BaseMinerNeuron(BaseNeuron):
     """
 
     neuron_type: str = "MinerNeuron"
-
+    version = "0.0.1"
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):
         super().add_args(parser)
@@ -75,7 +75,15 @@ class BaseMinerNeuron(BaseNeuron):
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: threading.Thread = None
+        self.gpu_monitoring_thread: threading.Thread = None
         self.lock = asyncio.Lock()
+        try:
+            # Initialize NVML
+            pynvml.nvmlInit()
+            self.nvmhandle = pynvml.nvmlDeviceGetHandleByIndex(0) 
+        except Exception as e:
+            bt.logging.error(f'❌ Error Init nvm {e}')
+        self.average_power = 0
     
     def request_job(self):
         bt.logging.info(f"⏩ Requsting Job from Genomaster: {self.config.genomaster.ip}:{self.config.genomaster.port}")
@@ -117,7 +125,7 @@ class BaseMinerNeuron(BaseNeuron):
         performance = train_search.main(genome=config['Genome'],
                                                 search_space = config['config']['search_space'],
                                                 init_channels = config['config']['init_channels'],
-                                                layers=config['config']['layers'], cutout=False,
+                                                layers=config['config']['layers'], cutout=config['config']['cutout'],
                                                 epochs=config['config']['epochs'],
                                                 save='arch_{}'.format(1),
                                                 expr_root='')
@@ -159,23 +167,26 @@ class BaseMinerNeuron(BaseNeuron):
         self.axon.start()
 
         bt.logging.info(f"⛏️ Miner starting at block: {self.block}")
-
         # This loop maintains the miner's operations until intentionally stopped.
         try:
             while not self.should_exit:
                 while(True):
-                    time.sleep(15)
+                    bt.logging.info(f"🔌 Power Usage {self.average_power}")
                     job_info= self.request_job()
                     if job_info:
                         bt.logging.info(f"⏪ Job received for {self.uid}: {job_info}")
                         train_res = self.train_genome(job_info)
-                        self.finish_job(self.uid, job_info['Genome_String'], train_res, 3)
+                        train_res.append(self.average_power)
+                        train_res.append(pynvml.nvmlDeviceGetName(self.nvmhandle))
+                        train_res.append(pynvml.nvmlDeviceGetMemoryInfo(self.nvmhandle).total)
+                        train_res.append(self.version)
+                        self.finish_job(self.uid, job_info['Genome_String'], train_res, 5)
                         # print(f"Sleeping for {wait_time} seconds before finishing the job...")
                         time.sleep(15)  # Sleep for the specified wait time before finishing the job
                     else:
                         bt.logging.info(f"ℹ️ No jobs are available! Error occurred or all jobs are finished, or the miner joined in the middle of the training epoch.")
 
-
+                    time.sleep(15)
 
                 # Sync metagraph and potentially set weights.
                 self.sync()
@@ -191,6 +202,27 @@ class BaseMinerNeuron(BaseNeuron):
         except Exception as e:
             bt.logging.error(traceback.format_exc())
 
+    def monitor_gpu_power(self):
+        """
+        Monitors GPU power consumption continuously until `should_exit` is set to True.
+        """
+        alpha = 0.001  # Smoothing factor
+        first_measurement = True
+        try:
+            while True: 
+                power_usage = pynvml.nvmlDeviceGetPowerUsage(self.nvmhandle) / 1000.0  # Convert milliwatts to watts
+                if first_measurement:
+                    self.average_power = power_usage  # Start with the first measurement
+                    first_measurement = False
+                else:
+                    self.average_power = alpha * power_usage + (1 - alpha) * self.average_power  # Update the EMA
+                time.sleep(1) 
+        except Exception as e:
+            bt.logging.error(f"An error occurred: {e}")
+        finally:
+            pynvml.nvmlShutdown()  # Ensure NVML shutdown if an error occurs or loop is manually stopped
+
+
     def run_in_background_thread(self):
         """
         Starts the miner's operations in a separate background thread.
@@ -201,6 +233,9 @@ class BaseMinerNeuron(BaseNeuron):
             self.should_exit = False
             self.thread = threading.Thread(target=self.run, daemon=True)
             self.thread.start()
+            # Thread for GPU power monitoring
+            self.gpu_monitoring_thread = threading.Thread(target=self.monitor_gpu_power, daemon=True)
+            self.gpu_monitoring_thread.start()
             self.is_running = True
             bt.logging.debug("Started")
 
@@ -212,6 +247,7 @@ class BaseMinerNeuron(BaseNeuron):
             bt.logging.debug("Stopping miner in background thread.")
             self.should_exit = True
             self.thread.join(5)
+            self.gpu_monitoring_thread.join(5)
             self.is_running = False
             bt.logging.debug("Stopped")
 
