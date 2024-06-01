@@ -30,7 +30,13 @@ from src.utils.config import add_genomaster_args
 sys.path.insert(0, 'nsga-net/')
 from search import train_search
 import pynvml
+from utilities import utils
 import requests
+import datetime as dt
+from model.data import Model, ModelId
+from model.storage.chain.chain_model_metadata_store import ChainModelMetadataStore
+from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModelStore
+from model.storage.remote_model_store import RemoteModelStore
 
 
 class BaseMinerNeuron(BaseNeuron):
@@ -130,7 +136,7 @@ class BaseMinerNeuron(BaseNeuron):
                                                 save='arch_{}'.format(1),
                                                 expr_root='')
         return list(performance.values())
-    def run(self):
+    async def run(self):
         """
         Initiates and manages the main loop for the miner on the Bittensor network. The main loop handles graceful shutdown on keyboard interrupts and logs unforeseen errors.
 
@@ -169,28 +175,50 @@ class BaseMinerNeuron(BaseNeuron):
         bt.logging.info(f"⛏️ Miner starting at block: {self.block}")
         # This loop maintains the miner's operations until intentionally stopped.
         try:
-            while not self.should_exit:
-                while(True):
-                    bt.logging.info(f"🔌 Power Usage {self.average_power}")
-                    job_info= self.request_job()
-                    if job_info:
-                        bt.logging.info(f"⏪ Job received for {self.uid}: {job_info}")
-                        train_res = self.train_genome(job_info)
-                        train_res.append(self.average_power)
-                        train_res.append(pynvml.nvmlDeviceGetName(self.nvmhandle))
-                        train_res.append(pynvml.nvmlDeviceGetMemoryInfo(self.nvmhandle).total)
-                        train_res.append(self.version)
-                        self.finish_job(self.uid, job_info['Genome_String'], train_res, 5)
-                        # print(f"Sleeping for {wait_time} seconds before finishing the job...")
-                        time.sleep(15)  # Sleep for the specified wait time before finishing the job
-                    else:
-                        bt.logging.info(f"ℹ️ No jobs are available! Error occurred or all jobs are finished, or the miner joined in the middle of the training epoch.")
+            metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
+            remote_model_store = HuggingFaceModelStore()
+            
+            run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            bt.logging.info(f"⛏️ run_id: {run_id}")
+            
+            namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
+            bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
+            model_id = ModelId(namespace=namespace, name=name,accuracy="99.11,255.12,300.12")
+            HuggingFaceModelStore.assert_access_token_exists()
+            model = '/home/nima/Downloads/cifar10_resnet20-4118986f.pt'
+            model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=model))
+            bt.logging.success("Uploaded model to hugging face.")
+            print(model_id)
+            while True:
+                try:
+                    await metadata_store.store_model_metadata(
+                        self.wallet.hotkey.ss58_address, model_id)
 
-                    time.sleep(15)
+                    bt.logging.info(
+                        "Wrote model metadata to the chain. Checking we can read it back..."
+                    )
 
-                # Sync metagraph and potentially set weights.
-                self.sync()
-                self.step += 1
+                    model_metadata =  await metadata_store.retrieve_model_metadata(
+                        self.wallet.hotkey.ss58_address
+                    )
+                    bt.logging.info(f"⛏️ model_metadata: {model_metadata}")
+                    # if not model_metadata or model_metadata.id != model_id:
+                    #     bt.logging.error(
+                    #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
+                    #     )
+                    #     raise ValueError(
+                    #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
+                    #     )
+
+                    bt.logging.success("Committed model to the chain.")
+                    
+                except Exception as e:
+                    bt.logging.error(f"Failed to advertise model on the chain: {e}")
+                    bt.logging.error(f"Retrying in {20} seconds...")
+                    time.sleep(20)
+
+
+
 
         # If someone intentionally stops the miner, it'll safely terminate operations.
         except KeyboardInterrupt:
@@ -231,13 +259,16 @@ class BaseMinerNeuron(BaseNeuron):
         if not self.is_running:
             bt.logging.debug("Starting miner in background thread.")
             self.should_exit = False
-            self.thread = threading.Thread(target=self.run, daemon=True)
+            self.thread = threading.Thread(target=self.run_async_main)
             self.thread.start()
             # Thread for GPU power monitoring
             self.gpu_monitoring_thread = threading.Thread(target=self.monitor_gpu_power, daemon=True)
             self.gpu_monitoring_thread.start()
             self.is_running = True
             bt.logging.debug("Started")
+    
+    def run_async_main(self):
+        asyncio.run(self.run())
 
     def stop_run_thread(self):
         """

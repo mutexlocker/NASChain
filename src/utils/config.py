@@ -157,6 +157,12 @@ def add_miner_args(cls, parser):
         help="If set, we will force incoming requests to have a permit.",
         default=False,
     )
+    parser.add_argument(
+        "--hf_repo_id",
+        type=str,
+        help="The hugging face repo id, which should include the org or user and repo name. E.g. jdoe/pretraining",
+    )
+
 
     parser.add_argument(
         "--blacklist.allow_non_registered",
