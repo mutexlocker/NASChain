@@ -181,9 +181,9 @@ class BaseMinerNeuron(BaseNeuron):
             run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             bt.logging.info(f"⛏️ run_id: {run_id}")
             
-            namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
-            bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
-            model_id = ModelId(namespace=namespace, name=name,accuracy="99.11,255.12,300.12")
+            # namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
+            # bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
+            model_id = ModelId(namespace=self.config.hf_repo_id, name=self.uid,accuracy="[99.11,255.12,300.12]")
             HuggingFaceModelStore.assert_access_token_exists()
             model = '/home/nima/Downloads/cifar10_resnet20-4118986f.pt'
             model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=model))
