@@ -119,28 +119,6 @@ def add_args(cls, parser):
         default="",
     )
 
-def add_genomaster_args(cls, parser):
-
-    parser.add_argument(
-        "--genomaster.ip",
-        type=str,
-        help="Ip address of genomaster",
-        default="",
-    )
-    parser.add_argument(
-        "--genomaster.port",
-        type=str,
-        help="Port number of genomaster",
-        default="",
-    )
-
-    parser.add_argument(
-        "--genomaster.valid.endpoint",
-        type=str,
-        help="Port number of genomaster",
-        default="/handle_valid_request",
-    )
-
 def add_miner_args(cls, parser):
     """Add miner specific arguments to the parser."""
 
@@ -183,6 +161,13 @@ def add_miner_args(cls, parser):
         type=str,
         default="opentensor-dev",
         help="Wandb entity to log to.",
+    )
+
+    parser.add_argument(
+        "--model.dir",
+        type=str,
+        default=None,
+        help="Model dir to uplaod to HF",
     )
 
 

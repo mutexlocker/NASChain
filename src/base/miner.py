@@ -21,15 +21,14 @@ import asyncio
 import threading
 import argparse
 import traceback
+import os
 import sys
 import bittensor as bt
 from requests.exceptions import ConnectionError, InvalidSchema, RequestException
 from src.base.neuron import BaseNeuron
 from src.utils.config import add_miner_args
-from src.utils.config import add_genomaster_args
 sys.path.insert(0, 'nsga-net/')
 from search import train_search
-import pynvml
 from utilities import utils
 import requests
 import datetime as dt
@@ -37,6 +36,7 @@ from model.data import Model, ModelId
 from model.storage.chain.chain_model_metadata_store import ChainModelMetadataStore
 from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModelStore
 from model.storage.remote_model_store import RemoteModelStore
+from model.dummy_trainer import DummyTrainer
 
 
 class BaseMinerNeuron(BaseNeuron):
@@ -45,12 +45,11 @@ class BaseMinerNeuron(BaseNeuron):
     """
 
     neuron_type: str = "MinerNeuron"
-    version = "0.0.1"
+    
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):
         super().add_args(parser)
         add_miner_args(cls, parser)
-        add_genomaster_args(cls, parser)
 
     def __init__(self, config=None):
         super().__init__(config=config)
@@ -81,61 +80,10 @@ class BaseMinerNeuron(BaseNeuron):
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: threading.Thread = None
-        self.gpu_monitoring_thread: threading.Thread = None
         self.lock = asyncio.Lock()
-        try:
-            # Initialize NVML
-            pynvml.nvmlInit()
-            self.nvmhandle = pynvml.nvmlDeviceGetHandleByIndex(0) 
-        except Exception as e:
-            bt.logging.error(f'❌ Error Init nvm {e}')
-        self.average_power = 0
+        self.save_dir = 'saved_model'
+
     
-    def request_job(self):
-        bt.logging.info(f"⏩ Requsting Job from Genomaster: {self.config.genomaster.ip}:{self.config.genomaster.port}")
-        try:
-            # Make a POST request to the server to request a job
-            response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/request_job', json={'user_name': self.uid})
-            if response.status_code == 200:
-                return response.json()  # Return the job details
-            else:
-                return None  # No job available or user already has a job
-        except ConnectionError as e:
-            bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}')
-        except InvalidSchema as e:
-            bt.logging.error(f'❌ Invalid URL schema: {e}')
-        except RequestException as e:
-            bt.logging.error(f'❌ Error during request to Genomaster server: {e}')
-
-    def finish_job(self, user_name, genome_string, genome_results, attempts):
-        # Make a POST request to the server to mark a job as finished
-        for i in range(attempts):
-            try:
-                response = requests.post(f'{self.config.genomaster.ip}:{self.config.genomaster.port}/finish_job', json={
-                    'user_name': user_name,
-                    'genome_string': genome_string,
-                    'response_values': genome_results
-                })
-                if response.status_code == 200:
-                    bt.logging.info(f"✅ Job {genome_string} results submitted by {user_name}. Responses: {genome_results}")
-                    return
-                else:
-                    error_message = response.json().get('message', 'No message provided')
-                    bt.logging.error(f"❌ Job results submmited to sarver was not accepted. status code {response.status_code}, Reason = {error_message}")
-            except Exception as e:
-                    bt.logging.error(f'❌ Failed to connect to Genomaster server: {e}, retrying in 15 seconds..')
-                    time.sleep(2)
-
-
-    def train_genome(self,config):
-        performance = train_search.main(genome=config['Genome'],
-                                                search_space = config['config']['search_space'],
-                                                init_channels = config['config']['init_channels'],
-                                                layers=config['config']['layers'], cutout=config['config']['cutout'],
-                                                epochs=config['config']['epochs'],
-                                                save='arch_{}'.format(1),
-                                                expr_root='')
-        return list(performance.values())
     async def run(self):
         """
         Initiates and manages the main loop for the miner on the Bittensor network. The main loop handles graceful shutdown on keyboard interrupts and logs unforeseen errors.
@@ -164,10 +112,10 @@ class BaseMinerNeuron(BaseNeuron):
 
         # Serve passes the axon information to the network + netuid we are hosting on.
         # This will auto-update if the axon port of external ip have changed.
-        bt.logging.info(
-            f"Serving miner axon {self.axon} on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}"
-        )
-        self.axon.serve(netuid=self.config.netuid, subtensor=self.subtensor)
+        # bt.logging.info(
+        #     f"Serving miner axon {self.axon} on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}"
+        # )
+        # self.axon.serve(netuid=self.config.netuid, subtensor=self.subtensor)
 
         # # Start  starts the miner's axon, making it active on the network.
         # self.axon.start()
@@ -178,48 +126,53 @@ class BaseMinerNeuron(BaseNeuron):
             metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
             remote_model_store = HuggingFaceModelStore()
             
-            run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            bt.logging.info(f"⛏️ run_id: {run_id}")
-            
+            run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")         
             # namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
             # bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
             model_id = ModelId(namespace=self.config.hf_repo_id, name=self.uid,accuracy="[99.11,255.12,300.12]")
             HuggingFaceModelStore.assert_access_token_exists()
-            model = '/home/nima/Downloads/cifar10_resnet20-4118986f.pt'
-            model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=model))
+            # Replace below code with you NAS algo to generate optmial model for you or give a path to model from args
+            if self.config.model.dir is None:
+                bt.logging.info("Training Model!")
+                trainer = DummyTrainer()
+                trainer.train()
+                model = trainer.get_model()    
+                if not os.path.exists(self.save_dir):
+                    os.makedirs(self.save_dir)
+                save_path = os.path.join(self.save_dir, 'model.pth')
+                torch.save(model, save_path)
+                model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=save_path))
+            else:
+                bt.logging.info("loading model offline!")
+                model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=self.config.model.dir))
+
             bt.logging.success("Uploaded model to hugging face.")
-            print(model_id)
-            while True:
-                try:
-                    await metadata_store.store_model_metadata(
-                        self.wallet.hotkey.ss58_address, model_id)
 
-                    bt.logging.info(
-                        "Wrote model metadata to the chain. Checking we can read it back..."
-                    )
+            try:
+                await metadata_store.store_model_metadata(
+                    self.wallet.hotkey.ss58_address, model_id)
 
-                    model_metadata =  await metadata_store.retrieve_model_metadata(
-                        self.wallet.hotkey.ss58_address
-                    )
-                    bt.logging.info(f"⛏️ model_metadata: {model_metadata}")
-                    # if not model_metadata or model_metadata.id != model_id:
-                    #     bt.logging.error(
-                    #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
-                    #     )
-                    #     raise ValueError(
-                    #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
-                    #     )
+                bt.logging.info(
+                    "Wrote model metadata to the chain. Checking we can read it back..."
+                )
 
-                    bt.logging.success("Committed model to the chain.")
-                    
-                except Exception as e:
-                    bt.logging.error(f"Failed to advertise model on the chain: {e}")
-                    bt.logging.error(f"Retrying in {20} seconds...")
-                    time.sleep(20)
+                model_metadata =  await metadata_store.retrieve_model_metadata(
+                    self.wallet.hotkey.ss58_address
+                )
+                bt.logging.info(f"⛏️ model_metadata: {model_metadata}")
+                # if not model_metadata or model_metadata.id != model_id:
+                #     bt.logging.error(
+                #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
+                #     )
+                #     raise ValueError(
+                #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
+                #     )
 
-
-
-
+                bt.logging.success("Committed model to the chain.")
+                
+            except Exception as e:
+                bt.logging.error(f"Failed to advertise model on the chain: {e}")
+                
         # If someone intentionally stops the miner, it'll safely terminate operations.
         except KeyboardInterrupt:
             # self.axon.stop()
@@ -229,27 +182,6 @@ class BaseMinerNeuron(BaseNeuron):
         # In case of unforeseen errors, the miner will log the error and continue operations.
         except Exception as e:
             bt.logging.error(traceback.format_exc())
-
-    def monitor_gpu_power(self):
-        """
-        Monitors GPU power consumption continuously until `should_exit` is set to True.
-        """
-        alpha = 0.001  # Smoothing factor
-        first_measurement = True
-        try:
-            while True: 
-                power_usage = pynvml.nvmlDeviceGetPowerUsage(self.nvmhandle) / 1000.0  # Convert milliwatts to watts
-                if first_measurement:
-                    self.average_power = power_usage  # Start with the first measurement
-                    first_measurement = False
-                else:
-                    self.average_power = alpha * power_usage + (1 - alpha) * self.average_power  # Update the EMA
-                time.sleep(1) 
-        except Exception as e:
-            bt.logging.error(f"An error occurred: {e}")
-        finally:
-            pynvml.nvmlShutdown()  # Ensure NVML shutdown if an error occurs or loop is manually stopped
-
 
     def run_in_background_thread(self):
         """
@@ -261,9 +193,6 @@ class BaseMinerNeuron(BaseNeuron):
             self.should_exit = False
             self.thread = threading.Thread(target=self.run_async_main)
             self.thread.start()
-            # Thread for GPU power monitoring
-            self.gpu_monitoring_thread = threading.Thread(target=self.monitor_gpu_power, daemon=True)
-            self.gpu_monitoring_thread.start()
             self.is_running = True
             bt.logging.debug("Started")
     
@@ -278,7 +207,6 @@ class BaseMinerNeuron(BaseNeuron):
             bt.logging.debug("Stopping miner in background thread.")
             self.should_exit = True
             self.thread.join(5)
-            self.gpu_monitoring_thread.join(5)
             self.is_running = False
             bt.logging.debug("Stopped")
 
