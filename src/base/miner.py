@@ -37,6 +37,7 @@ from model.storage.chain.chain_model_metadata_store import ChainModelMetadataSto
 from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModelStore
 from model.storage.remote_model_store import RemoteModelStore
 from model.dummy_trainer import DummyTrainer
+from model.model_analysis import ModelAnalysis
 
 
 class BaseMinerNeuron(BaseNeuron):
@@ -129,7 +130,7 @@ class BaseMinerNeuron(BaseNeuron):
             run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")         
             # namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
             # bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
-            model_id = ModelId(namespace=self.config.hf_repo_id, name=self.uid,accuracy="[99.11,255.12,300.12]")
+            model_id = ModelId(namespace=self.config.hf_repo_id, name='naschain',accuracy="[99.11,255.12,300.12]")
             HuggingFaceModelStore.assert_access_token_exists()
             # Replace below code with you NAS algo to generate optmial model for you or give a path to model from args
             if self.config.model.dir is None:
@@ -139,8 +140,14 @@ class BaseMinerNeuron(BaseNeuron):
                 model = trainer.get_model()    
                 if not os.path.exists(self.save_dir):
                     os.makedirs(self.save_dir)
-                save_path = os.path.join(self.save_dir, 'model.pth')
+                save_path = os.path.join(self.save_dir, 'model.pt')
                 torch.save(model, save_path)
+                analysis = ModelAnalysis(model)
+                try:
+                    params, macs, flops = analysis.get_analysis()
+                    bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
+                except Exception as e:
+                    bt.logging.error(f"Failed to profile the model: {e}")
                 model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=save_path))
             else:
                 bt.logging.info("loading model offline!")
