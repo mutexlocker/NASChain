@@ -93,6 +93,8 @@ class DummyTrainer:
 
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
+                if isinstance(outputs, tuple):
+                    outputs = outputs[0]  # Take the f
                 loss = self.criterion(outputs, labels)
                 loss.backward()
                 self.optimizer.step()
@@ -113,6 +115,8 @@ class DummyTrainer:
                 images, labels = data
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = self.model(images)
+                if isinstance(outputs, tuple):
+                    outputs = outputs[0]  # Take the first 
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
