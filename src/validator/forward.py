@@ -28,8 +28,15 @@ import pandas as pd
 import pandas as pd
 import requests
 import bittensor as bt  # Assuming this is the correct way to import bittensor in your context
+import asyncio
+from model.storage.chain.chain_model_metadata_store import ChainModelMetadataStore
 
-def forward(self):
+
+async def get_metadata(metadata_store, hotkey):
+    """Get metadata about a model by hotkey"""
+    return await metadata_store.retrieve_model_metadata(hotkey)
+
+async def forward(self):
     """
     The forward function is called by the validator every time step.
     It is responsible for querying the network and scoring the responses.
@@ -37,56 +44,15 @@ def forward(self):
     Args:
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
     """
-    try:
-        # Construct the full URL
-        url = self.config.genomaster.ip + ':' + self.config.genomaster.port + self.config.genomaster.valid.endpoint
-        response = requests.get(url)  # This is a synchronous call, consider using an async library if needed
-        # Check the status code of the response
-        if response.status_code == 200:
-            bt.logging.info("✅ Validation request successful.")
-            # Convert the JSON response to a pandas DataFrame
-            response_data = response.json()
-            df = pd.DataFrame(response_data)
-            # check to seee if there is new batch of data for validation is ready in genomaster 
-            if self.valid_data_length != df.shape[0]:
-                bt.logging.info("✅ New batch arrived.. Updating Weights...")
-                rewards, uids, msgs = get_rewards(self, query=self.step, responses_df=df)
-                self.update_scores(rewards, uids)
-                self.valid_data_length = df.shape[0]
-        #Todo: send rewward results back to miners
-        #     responses = await self.dendrite(
-        #     # Send the query to selected miner axons in the network.
-        #     axons=[self.metagraph.axons[uid] for uid in uids],
-        #     # Construct a dummy query. This simply contains a single integer.
-        #     synapse=Dummy(dummy_input=self.step),
-        #     # All responses have the deserialize function called on them before returning.
-        #     # You are encouraged to define your own deserialization function.
-        #     deserialize=True,
-        # )
-            # Display the DataFrame
-            # bt.logging.info("Response DataFrame:")
-            # bt.logging.info(df)
-
-        elif response.status_code == 503:
-            bt.logging.warning("⏳ GenoMaster is currently busy, connections will be accepted soon.")
-
-        else:
-            # bt.logging.error("❌ Validation request failed.")
-            # bt.logging.error("❌ Status code:", response.status_code)
-            bt.logging.warning("⏳ Validation request not complete. Message:", response.json().get('message'))
+    metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
+    for uid in range(self.metagraph.n.item()):
+        hotkey = self.metagraph.hotkeys[uid]
+        bt.logging.warning(f"uid {uid} {hotkey}")
+        model_metadata =  await metadata_store.retrieve_model_metadata(hotkey)
+        bt.logging.warning(f"metadta: {model_metadata}")
     
-    except requests.exceptions.HTTPError as errh:
-        bt.logging.error(f"❌ HTTP Error: {errh}")
-    except requests.exceptions.ConnectionError as errc:
-        bt.logging.error(f"❌ Error Connecting: {errc}")
-    except requests.exceptions.Timeout as errt:
-        bt.logging.error(f"❌ Timeout Error: {errt}")
-    except requests.exceptions.RequestException as err:
-        bt.logging.error(f"❌ RequestException : {err}")
-    except Exception as e:
-        bt.logging.error(f"❌ An error occurred in forward: {e}")
-        # Optionally, print the traceback if you need more details
- 
+
+
 
 
 

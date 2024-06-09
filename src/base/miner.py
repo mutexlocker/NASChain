@@ -161,6 +161,9 @@ class BaseMinerNeuron(BaseNeuron):
                     bt.logging.error(f"Failed to profile the model: {e}")
                 upload_dir = self.config.model.dir
 
+            model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=upload_dir))
+            bt.logging.success(f"Uploaded model to hugging face. {model_id}")
+
             try:
                 await metadata_store.store_model_metadata(
                     self.wallet.hotkey.ss58_address, model_id)
@@ -182,8 +185,7 @@ class BaseMinerNeuron(BaseNeuron):
                 #     )
 
                 bt.logging.success("Committed model to the chain.")
-                model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=upload_dir))
-                bt.logging.success("Uploaded model to hugging face.")
+
                 
             except Exception as e:
                 bt.logging.error(f"Failed to advertise model on the chain: {e}")

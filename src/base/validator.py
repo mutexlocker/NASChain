@@ -32,7 +32,7 @@ from traceback import print_exception
 from src.base.neuron import BaseNeuron
 from src.mock import MockDendrite
 from src.utils.config import add_validator_args
-from src.utils.config import add_genomaster_args
+
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -46,7 +46,7 @@ class BaseValidatorNeuron(BaseNeuron):
     def add_args(cls, parser: argparse.ArgumentParser):
         super().add_args(parser)
         add_validator_args(cls, parser)
-        add_genomaster_args(cls, parser)
+        
 
     def __init__(self, config=None):
         super().__init__(config=config)
@@ -118,7 +118,7 @@ class BaseValidatorNeuron(BaseNeuron):
     #     ]
     #     await asyncio.gather(*coroutines)
 
-    def run(self):
+    async def run(self):
         """
         Initiates and manages the main loop for the miner on the Bittensor network. The main loop handles graceful shutdown on keyboard interrupts and logs unforeseen errors.
 
@@ -152,12 +152,12 @@ class BaseValidatorNeuron(BaseNeuron):
                 # Run multiple forwards concurrently.
                 #self.loop.run_until_complete(self.concurrent_forward())
 
-                self.forward()
+                await self.forward()
 
                 # Check if we should exit.
                 if self.should_exit:
                     break
-                time.sleep(60)
+                time.sleep(5)
                 # Sync metagraph and potentially set weights.
                 self.sync()
                 self.resync_metagraph()
@@ -177,6 +177,9 @@ class BaseValidatorNeuron(BaseNeuron):
                 print_exception(type(err), err, err.__traceback__)
             )
 
+    def _run_coroutine_in_thread(self):
+        asyncio.run(self.run())
+        
     def run_in_background_thread(self):
         """
         Starts the validator's operations in a background thread upon entering the context.
@@ -185,7 +188,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if not self.is_running:
             bt.logging.debug("Starting validator in background thread.")
             self.should_exit = False
-            self.thread = threading.Thread(target=self.run, daemon=True)
+            self.thread = threading.Thread(target=self._run_coroutine_in_thread, daemon=True)
             self.thread.start()
             self.is_running = True
             bt.logging.debug("Started")
