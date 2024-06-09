@@ -126,7 +126,7 @@ class BaseMinerNeuron(BaseNeuron):
         try:
             metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
             remote_model_store = HuggingFaceModelStore()
-            
+            upload_dir = ""
             run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")         
             # namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
             # bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
@@ -148,12 +148,18 @@ class BaseMinerNeuron(BaseNeuron):
                     bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
                 except Exception as e:
                     bt.logging.error(f"Failed to profile the model: {e}")
-                model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=save_path))
+                upload_dir = save_path
+                
             else:
                 bt.logging.info("loading model offline!")
-                model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=self.config.model.dir))
-
-            bt.logging.success("Uploaded model to hugging face.")
+                try:
+                    model = torch.load(self.config.model.dir)
+                    analysis = ModelAnalysis(model)
+                    params, macs, flops = analysis.get_analysis()
+                    bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
+                except Exception as e:
+                    bt.logging.error(f"Failed to profile the model: {e}")
+                upload_dir = self.config.model.dir
 
             try:
                 await metadata_store.store_model_metadata(
@@ -176,6 +182,8 @@ class BaseMinerNeuron(BaseNeuron):
                 #     )
 
                 bt.logging.success("Committed model to the chain.")
+                model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=upload_dir))
+                bt.logging.success("Uploaded model to hugging face.")
                 
             except Exception as e:
                 bt.logging.error(f"Failed to advertise model on the chain: {e}")
