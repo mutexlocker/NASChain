@@ -99,7 +99,7 @@ class HuggingFaceModelStore(RemoteModelStore):
 
         # Get the directory the model was stored to.
         model_dir = utils.get_hf_download_path(local_path, model_id)
-        local_model_path = hf_hub_download(repo_id=repo_id, filename=model_id.name+'.pt')
+        local_model_path = hf_hub_download(repo_id=repo_id, filename='model.pt')
 
         
 
@@ -107,8 +107,8 @@ class HuggingFaceModelStore(RemoteModelStore):
         utils.realize_symlinks_in_directory(model_dir)
 
         # Compute the hash of the downloaded model.
-        model_hash = utils.get_hash_of_directory(model_dir)
-        print("model_hash:", model_hash)
+        model_hash = utils.get_hash_of_directory(os.path.dirname(local_model_path))
+        print("model_hash:", model_hash, local_model_path)
         model_id_with_hash = ModelId(
             namespace=model_id.namespace,
             name=model_id.name,
