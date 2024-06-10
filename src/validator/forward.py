@@ -33,6 +33,47 @@ from model.storage.chain.chain_model_metadata_store import ChainModelMetadataSto
 from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModelStore
 from model.storage.disk import utils
 
+
+
+class ValidationConfig:
+    def __init__(self, min_parameters=None, max_parameters=None, min_flops=None, max_flops=None, 
+                 min_accuracy=None, max_accuracy=None, max_download_file_size=None):
+        self.min_parameters = min_parameters
+        self.max_parameters = max_parameters
+        self.min_flops = min_flops
+        self.max_flops = max_flops
+        self.min_accuracy = min_accuracy
+        self.max_accuracy = max_accuracy
+        self.max_download_file_size = max_download_file_size
+
+
+
+def append_row(df, row_data):
+    """
+    Appends or updates a row in the DataFrame.
+
+    Parameters:
+    df (pd.DataFrame): The DataFrame to append to.
+    row_data (dict): A dictionary containing the row data.
+
+    Returns:
+    pd.DataFrame: The DataFrame with the appended or updated row.
+    """
+    # Check if the uid exists in the DataFrame
+    existing_row_index = df.index[df['uid'] == row_data['uid']].tolist()
+
+    if existing_row_index:
+        # If commit value is different, update the existing row
+        index = existing_row_index[0]
+        df.loc[index] = row_data
+    else:
+        # If uid does not exist, append the new row
+        new_row = pd.DataFrame([row_data])
+        df = pd.concat([df, new_row], ignore_index=True)
+
+    return df
+
+
 async def get_metadata(metadata_store, hotkey):
     """Get metadata about a model by hotkey"""
     return await metadata_store.retrieve_model_metadata(hotkey)
@@ -45,6 +86,17 @@ async def forward(self):
     Args:
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
     """
+
+    vali_config = ValidationConfig(
+        min_parameters=1000, 
+        max_parameters=1000000, 
+        min_flops=1e9, 
+        max_flops=1e12, 
+        min_accuracy=0.8, 
+        max_accuracy=0.99, 
+        max_download_file_size=10*1024*1024
+    )
+
     metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
     hg_model_store = HuggingFaceModelStore()
     for uid in range(self.metagraph.n.item()):
@@ -53,8 +105,21 @@ async def forward(self):
         bt.logging.info(f"uid {uid} {hotkey}")
         model_metadata =  await metadata_store.retrieve_model_metadata(hotkey)
         try:
-            model_with_hash = await hg_model_store.download_model(model_metadata.id, "temp_dir")
-            bt.logging.info(f"hash_in_metadata: {model_metadata.id.hash}, {model_with_hash.id.hash}")
+            model_with_hash = await hg_model_store.download_model(model_metadata.id, local_path='cache', model_size_limit= vali_config.max_download_file_size)
+            bt.logging.info(f"hash_in_metadata: {model_metadata.id.hash}, {model_with_hash.id.hash}, {model_with_hash.pt_model},{model_with_hash.id.commit}")
+            new_row = {
+                'uid': uid,
+                'local_model_dir': model_with_hash.pt_model,
+                'commit': model_with_hash.id.commit,
+                'params': None,
+                'accuracy': None,
+                'evaluate': False,
+                'pareto': False
+            }
+            self.eval_frame = append_row(self.eval_frame, new_row)
+
+
+            print(self.eval_frame)
         except Exception as e:
             
             bt.logging.error(f"Unexpected error: {e}")

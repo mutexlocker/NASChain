@@ -103,7 +103,7 @@ def get_hash_of_file(path: str) -> str:
 
 def get_hash_of_directory(path: str) -> str:
     dir_hash = hashlib.sha256()
-
+    
     # Recursively walk everything under the directory for files.
     for cur_path, dirnames, filenames in os.walk(path):
         # Ensure we walk future directories in a consistent order.

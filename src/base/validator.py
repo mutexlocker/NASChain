@@ -32,7 +32,7 @@ from traceback import print_exception
 from src.base.neuron import BaseNeuron
 from src.mock import MockDendrite
 from src.utils.config import add_validator_args
-
+import pandas as pd
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -85,6 +85,21 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: threading.Thread = None
         self.lock = asyncio.Lock()
+        self.eval_frame = self.create_empty_dataframe()
+
+
+    def create_empty_dataframe(self):
+        columns = {
+            'uid': pd.Series(dtype='int'),
+            'local_model_dir': pd.Series(dtype='object'),
+            'commit': pd.Series(dtype='object'),
+            'params': pd.Series(dtype='float'),
+            'accuracy': pd.Series(dtype='float'),
+            'evaluate': pd.Series(dtype='bool'),
+            'pareto': pd.Series(dtype='bool'),
+        }
+        df = pd.DataFrame(columns)
+        return df
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
