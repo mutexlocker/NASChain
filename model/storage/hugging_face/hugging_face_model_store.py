@@ -104,7 +104,7 @@ class HuggingFaceModelStore(RemoteModelStore):
         
 
         # Realize all symlinks in that directory since Transformers library does not support avoiding symlinks.
-        utils.realize_symlinks_in_directory(model_dir)
+        # utils.realize_symlinks_in_directory(model_dir)
 
         # Compute the hash of the downloaded model.
         model_hash = utils.get_hash_of_directory(os.path.dirname(local_model_path))

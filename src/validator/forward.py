@@ -30,7 +30,8 @@ import requests
 import bittensor as bt  # Assuming this is the correct way to import bittensor in your context
 import asyncio
 from model.storage.chain.chain_model_metadata_store import ChainModelMetadataStore
-
+from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModelStore
+from model.storage.disk import utils
 
 async def get_metadata(metadata_store, hotkey):
     """Get metadata about a model by hotkey"""
@@ -45,11 +46,18 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
     """
     metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
+    hg_model_store = HuggingFaceModelStore()
     for uid in range(self.metagraph.n.item()):
+        bt.logging.error(f"--------------------")
         hotkey = self.metagraph.hotkeys[uid]
-        bt.logging.warning(f"uid {uid} {hotkey}")
+        bt.logging.info(f"uid {uid} {hotkey}")
         model_metadata =  await metadata_store.retrieve_model_metadata(hotkey)
-        bt.logging.warning(f"metadta: {model_metadata}")
+        try:
+            model_with_hash = await hg_model_store.download_model(model_metadata.id, "temp_dir")
+            bt.logging.info(f"hash_in_metadata: {model_metadata.id.hash}, {model_with_hash.id.hash}")
+        except Exception as e:
+            
+            bt.logging.error(f"Unexpected error: {e}")
     
 
 
