@@ -29,7 +29,7 @@ class ModelId(BaseModel):
         description="Namespace where the model can be found. ex. Hugging Face username/org."
     )
     name: str = Field(description="Name of the model.")
-    accuracy: str = Field(description="accuracy of the model.")
+    # accuracy: str = Field(description="accuracy of the model.")
 
 
     # When handling a model locally the commit and hash are not necessary.
@@ -44,7 +44,7 @@ class ModelId(BaseModel):
 
     def to_compressed_str(self) -> str:
         """Returns a compressed string representation."""
-        return f"{self.namespace}:{self.name}:{self.accuracy}:{self.commit}:{self.hash}"
+        return f"{self.namespace}:{self.name}:{self.commit}:{self.hash}" #{self.accuracy}
 
     @classmethod
     def from_compressed_str(cls, cs: str) -> Type["ModelId"]:
@@ -53,9 +53,9 @@ class ModelId(BaseModel):
         return cls(
             namespace=tokens[0],
             name=tokens[1],
-            accuracy=tokens[2],
-            commit=tokens[3] if tokens[3] != "None" else None,
-            hash=tokens[4] if tokens[4] != "None" else None,
+            # accuracy=tokens[2],
+            commit=tokens[2] if tokens[2] != "None" else None,
+            hash=tokens[3] if tokens[3] != "None" else None,
         )
 
 

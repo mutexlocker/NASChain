@@ -130,7 +130,7 @@ class BaseMinerNeuron(BaseNeuron):
             run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")         
             # namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
             # bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
-            model_id = ModelId(namespace=self.config.hf_repo_id, name='naschain',accuracy="[99.11,255.12,300.12]")
+            model_id = ModelId(namespace=self.config.hf_repo_id, name='naschain') #,accuracy="[99.11,255.12,300.12]"
             HuggingFaceModelStore.assert_access_token_exists()
             # Replace below code with you NAS algo to generate optmial model for you or give a path to model from args
             if self.config.model.dir is None:
@@ -162,7 +162,7 @@ class BaseMinerNeuron(BaseNeuron):
                 upload_dir = self.config.model.dir
 
             model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=upload_dir))
-            bt.logging.success(f"Uploaded model to hugging face. {model_id}")
+            bt.logging.success(f"Uploaded model to hugging face. {model_id} , {upload_dir}")
 
             try:
                 await metadata_store.store_model_metadata(

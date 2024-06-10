@@ -47,7 +47,7 @@ class HuggingFaceModelStore(RemoteModelStore):
         # Upload the model file
         api.upload_file(
             path_or_fileobj=model.pt_model,
-            path_in_repo=model.id.name + ".pt",
+            path_in_repo="model.pt",
             repo_id=repo_id,
             repo_type="model",
             token=token
@@ -55,13 +55,13 @@ class HuggingFaceModelStore(RemoteModelStore):
         commit_info = api.model_info(repo_id=repo_id, token=token)
         model_id_with_commit = ModelId(
             namespace=model.id.namespace,
-            accuracy=model.id.accuracy,
+            # accuracy=model.id.accuracy,
             name=model.id.name,
             hash=model.id.hash,
             commit=commit_info.sha,  # Get the latest commit sha
         )
         print("commit infor:--", commit_info)
-        print(model.id.hash)
+        
         # TODO consider skipping the redownload if a hash is already provided.
         # To get the hash we need to redownload it at a local tmp directory after which it can be deleted.
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -108,12 +108,13 @@ class HuggingFaceModelStore(RemoteModelStore):
 
         # Compute the hash of the downloaded model.
         model_hash = utils.get_hash_of_directory(model_dir)
+        print("model_hash:", model_hash)
         model_id_with_hash = ModelId(
             namespace=model_id.namespace,
             name=model_id.name,
             commit=model_id.commit,
             hash=model_hash,
-            accuracy=model_id.accuracy
+            # accuracy=model_id.accuracy
         )
 
         return Model(id=model_id_with_hash, pt_model=local_model_path)
