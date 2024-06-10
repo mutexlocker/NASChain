@@ -107,6 +107,10 @@ async def forward(self):
         try:
             model_with_hash = await hg_model_store.download_model(model_metadata.id, local_path='cache', model_size_limit= vali_config.max_download_file_size)
             bt.logging.info(f"hash_in_metadata: {model_metadata.id.hash}, {model_with_hash.id.hash}, {model_with_hash.pt_model},{model_with_hash.id.commit}")
+            
+            if model_metadata.id.hash != model_with_hash.id.hash:
+                raise ValueError(f"Hash mismatch: metadata hash {model_metadata.id.hash} != downloaded model hash {model_with_hash.id.hash}")
+
             new_row = {
                 'uid': uid,
                 'local_model_dir': model_with_hash.pt_model,
