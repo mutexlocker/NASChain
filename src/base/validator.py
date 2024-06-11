@@ -25,14 +25,16 @@ import asyncio
 import argparse
 import threading
 import bittensor as bt
-
+import sys
 from typing import List
 from traceback import print_exception
-
+sys.path.insert(0, 'nsga-net')
 from src.base.neuron import BaseNeuron
 from src.mock import MockDendrite
 from src.utils.config import add_validator_args
 import pandas as pd
+import os
+
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -85,7 +87,32 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: threading.Thread = None
         self.lock = asyncio.Lock()
-        self.eval_frame = self.create_empty_dataframe()
+        self.state_dir = 'state'
+        self.state_file = 'state.csv'
+        self.eval_frame = self.check_and_load_state(self.state_dir, self.state_file)
+
+
+
+    def check_and_load_state(self, state_dir, state_file):
+
+        if not os.path.exists(state_dir):
+            os.makedirs(state_dir)
+            bt.logging.info(f"Created directory: {state_dir}")
+
+        state_path = os.path.join(state_dir, state_file)
+        if os.path.exists(state_path):
+            self.eval_frame = pd.read_csv(state_path)
+            bt.logging.info(f"Loaded state from {state_path}")
+        else:
+            self.eval_frame = self.create_empty_dataframe()
+            bt.logging.info(f"No state file found at {state_path}, created an empty DataFrame")
+        return self.eval_frame
+
+    def save_validator_state(self):
+        state_path = os.path.join(self.state_dir, self.state_file)
+        bt.logging.info(f"Saving State to: {state_path}")
+        self.eval_frame.to_csv(state_path, index=False)
+       
 
 
     def create_empty_dataframe(self):

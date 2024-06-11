@@ -27,8 +27,7 @@ import bittensor as bt
 from requests.exceptions import ConnectionError, InvalidSchema, RequestException
 from src.base.neuron import BaseNeuron
 from src.utils.config import add_miner_args
-sys.path.insert(0, 'nsga-net/')
-from search import train_search
+sys.path.insert(0, 'nsga-net')
 from utilities import utils
 import requests
 import datetime as dt
@@ -135,7 +134,7 @@ class BaseMinerNeuron(BaseNeuron):
             # Replace below code with you NAS algo to generate optmial model for you or give a path to model from args
             if self.config.model.dir is None:
                 bt.logging.info("Training Model!")
-                trainer = DummyTrainer()
+                trainer = DummyTrainer(epochs=10)
                 trainer.train()
                 model = trainer.get_model()    
                 if not os.path.exists(self.save_dir):
@@ -143,62 +142,57 @@ class BaseMinerNeuron(BaseNeuron):
                 save_path = os.path.join(self.save_dir, 'model.pt')
                 torch.save(model, save_path)
                 analysis = ModelAnalysis(model)
-                try:
-                    params, macs, flops = analysis.get_analysis()
-                    bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
-                except Exception as e:
-                    bt.logging.error(f"Failed to profile the model: {e}")
+                params, macs, flops = analysis.get_analysis()
+                bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
                 upload_dir = save_path
                 
             else:
                 bt.logging.info("loading model offline!")
-                try:
-                    model = torch.load(self.config.model.dir)
-                    analysis = ModelAnalysis(model)
-                    params, macs, flops = analysis.get_analysis()
-                    bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
-                except Exception as e:
-                    bt.logging.error(f"Failed to profile the model: {e}")
+
+                model = torch.load(self.config.model.dir)
+                analysis = ModelAnalysis(model)
+                params, macs, flops = analysis.get_analysis()
+                bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
                 upload_dir = self.config.model.dir
 
             model_id = await remote_model_store.upload_model(Model(id=model_id, pt_model=upload_dir))
             bt.logging.success(f"Uploaded model to hugging face. {model_id} , {upload_dir}")
 
-            try:
-                await metadata_store.store_model_metadata(
-                    self.wallet.hotkey.ss58_address, model_id)
+        
+            await metadata_store.store_model_metadata(
+                self.wallet.hotkey.ss58_address, model_id)
 
-                bt.logging.info(
-                    "Wrote model metadata to the chain. Checking we can read it back..."
-                )
+            bt.logging.info(
+                "Wrote model metadata to the chain. Checking we can read it back..."
+            )
 
-                model_metadata =  await metadata_store.retrieve_model_metadata(
-                    self.wallet.hotkey.ss58_address
-                )
-                bt.logging.info(f"⛏️ model_metadata: {model_metadata}")
-                # if not model_metadata or model_metadata.id != model_id:
-                #     bt.logging.error(
-                #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
-                #     )
-                #     raise ValueError(
-                #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
-                #     )
+            model_metadata =  await metadata_store.retrieve_model_metadata(
+                self.wallet.hotkey.ss58_address
+            )
+            bt.logging.info(f"⛏️ model_metadata: {model_metadata}")
+            # if not model_metadata or model_metadata.id != model_id:
+            #     bt.logging.error(
+            #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
+            #     )
+            #     raise ValueError(
+            #         f"Failed to read back model metadata from the chain. Expected: {model_id}, got: {model_metadata}"
+            #     )
 
-                bt.logging.success("Committed model to the chain.")
+            bt.logging.success("Committed model to the chain.")
 
-                
-            except Exception as e:
-                bt.logging.error(f"Failed to advertise model on the chain: {e}")
+            
+        except Exception as e:
+            bt.logging.error(f"Failed to advertise model on the chain: {e}")
                 
         # If someone intentionally stops the miner, it'll safely terminate operations.
-        except KeyboardInterrupt:
-            # self.axon.stop()
-            bt.logging.success("Miner killed by keyboard interrupt.")
-            exit()
+        # except KeyboardInterrupt:
+        #     # self.axon.stop()
+        #     bt.logging.success("Miner killed by keyboard interrupt.")
+        #     exit()
 
-        # In case of unforeseen errors, the miner will log the error and continue operations.
-        except Exception as e:
-            bt.logging.error(traceback.format_exc())
+        # # In case of unforeseen errors, the miner will log the error and continue operations.
+        # except Exception as e:
+        #     bt.logging.error(traceback.format_exc())
 
     def run_in_background_thread(self):
         """

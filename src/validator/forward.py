@@ -23,7 +23,7 @@ from src.protocol import Dummy
 from src.validator.reward import get_rewards
 from src.utils.uids import get_random_uids
 import requests
-import pandas as pd
+import torch
 
 import pandas as pd
 import requests
@@ -32,46 +32,67 @@ import asyncio
 from model.storage.chain.chain_model_metadata_store import ChainModelMetadataStore
 from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModelStore
 from model.storage.disk import utils
-
-
+from model.vali_trainer import ValiTrainer
+from model.model_analysis import ModelAnalysis
+import traceback
 
 class ValidationConfig:
-    def __init__(self, min_parameters=None, max_parameters=None, min_flops=None, max_flops=None, 
-                 min_accuracy=None, max_accuracy=None, max_download_file_size=None):
-        self.min_parameters = min_parameters
-        self.max_parameters = max_parameters
-        self.min_flops = min_flops
-        self.max_flops = max_flops
-        self.min_accuracy = min_accuracy
-        self.max_accuracy = max_accuracy
-        self.max_download_file_size = max_download_file_size
+    def __init__(self):
+        self.min_parameters = 0
+        self.max_parameters = 0
+        self.min_flops = 0
+        self.max_flops = 0
+        self.min_accuracy = 0
+        self.max_accuracy = 0
+        self.max_download_file_size = 10*1024*1024
+        self.train_epochs = 5
 
 
+
+def should_skip_evaluation(df, uid):
+    # matching_rows = df.loc[df['uid'] == uid, 'evaluate']
+    if df.loc[df['uid'] == uid, 'evaluate'].values[0]:
+            return True
+    return False
 
 def append_row(df, row_data):
-    """
-    Appends or updates a row in the DataFrame.
-
-    Parameters:
-    df (pd.DataFrame): The DataFrame to append to.
-    row_data (dict): A dictionary containing the row data.
-
-    Returns:
-    pd.DataFrame: The DataFrame with the appended or updated row.
-    """
     # Check if the uid exists in the DataFrame
     existing_row_index = df.index[df['uid'] == row_data['uid']].tolist()
 
     if existing_row_index:
-        # If commit value is different, update the existing row
+        # Check if the commit value is different
         index = existing_row_index[0]
-        df.loc[index] = row_data
+        if df.loc[index, 'commit'] != row_data['commit']:
+            # Update the existing row
+            df.loc[index] = row_data
     else:
         # If uid does not exist, append the new row
         new_row = pd.DataFrame([row_data])
         df = pd.concat([df, new_row], ignore_index=True)
 
     return df
+
+
+def update_row(df, uid, params=None, accuracy=None, evaluate=None, pareto=None):
+    # Check if the uid exists in the DataFrame
+    existing_row_index = df.index[df['uid'] == uid].tolist()
+
+    if existing_row_index:
+        # If the uid exists, update the specified fields
+        index = existing_row_index[0]
+        if params is not None:
+            df.at[index, 'params'] = params
+        if accuracy is not None:
+            df.at[index, 'accuracy'] = accuracy
+        if evaluate is not None:
+            df.at[index, 'evaluate'] = evaluate
+        if pareto is not None:
+            df.at[index, 'pareto'] = pareto
+    else:
+        raise ValueError(f"UID {uid} does not exist in the DataFrame")
+
+    return df
+
 
 
 async def get_metadata(metadata_store, hotkey):
@@ -87,24 +108,16 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
     """
 
-    vali_config = ValidationConfig(
-        min_parameters=1000, 
-        max_parameters=1000000, 
-        min_flops=1e9, 
-        max_flops=1e12, 
-        min_accuracy=0.8, 
-        max_accuracy=0.99, 
-        max_download_file_size=10*1024*1024
-    )
-
+    vali_config = ValidationConfig()
+    trainer = ValiTrainer(epochs=vali_config.train_epochs)
     metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
     hg_model_store = HuggingFaceModelStore()
     for uid in range(self.metagraph.n.item()):
         bt.logging.error(f"--------------------")
         hotkey = self.metagraph.hotkeys[uid]
         bt.logging.info(f"uid {uid} {hotkey}")
-        model_metadata =  await metadata_store.retrieve_model_metadata(hotkey)
         try:
+            model_metadata =  await metadata_store.retrieve_model_metadata(hotkey)
             model_with_hash = await hg_model_store.download_model(model_metadata.id, local_path='cache', model_size_limit= vali_config.max_download_file_size)
             bt.logging.info(f"hash_in_metadata: {model_metadata.id.hash}, {model_with_hash.id.hash}, {model_with_hash.pt_model},{model_with_hash.id.commit}")
             
@@ -121,12 +134,33 @@ async def forward(self):
                 'pareto': False
             }
             self.eval_frame = append_row(self.eval_frame, new_row)
-
-
             print(self.eval_frame)
-        except Exception as e:
+            if should_skip_evaluation(self.eval_frame, uid):
+                bt.logging.info(f"already evaluated the model")
+                continue
+
+            # print(self.eval_frame)
+            model = torch.load(model_with_hash.pt_model)
+            acc = trainer.test(model)
+            analysis = ModelAnalysis(model)
+            params, macs, flops = analysis.get_analysis()
+            self.eval_frame = update_row(self.eval_frame, uid, accuracy = acc,params = params, evaluate = True)
+     
+            bt.logging.info(f"acc_before: {acc}") 
+            trainer.initialize_weights(model)
+            acc = trainer.test(model)
+            bt.logging.info(f"acc_after_rest: {acc}")
+            retrained_model = trainer.train(model)
+            acc = trainer.test(retrained_model)
+            bt.logging.info(f"acc_after_retrain: {acc}")
+            self.eval_frame = update_row(self.eval_frame, uid, accuracy = acc)
+            self.save_validator_state()
+
+
             
+        except Exception as e:
             bt.logging.error(f"Unexpected error: {e}")
+            # traceback.print_exc()
     
 
 

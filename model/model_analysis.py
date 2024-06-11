@@ -1,15 +1,15 @@
 from calflops import calculate_flops
 
 class ModelAnalysis:
-    def __init__(self, model, input_shape=(1, 3, 224, 224)):
-        self.model = model
+    def __init__(self, model, input_shape=(1, 3, 32, 32)):
+        self.model = model.eval()
         self.input_shape = input_shape
 
     def get_flops_macs_params(self):
         flops, macs, params = calculate_flops(
             model=self.model,
             input_shape=self.input_shape,
-            output_as_string=True,
+            output_as_string=False,
             output_precision=4
         )
         return params, macs, flops
