@@ -148,8 +148,8 @@ class BaseMinerNeuron(BaseNeuron):
                 
             else:
                 bt.logging.info("loading model offline!")
-
-                model = torch.load(self.config.model.dir)
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                model = torch.load(self.config.model.dir,map_location="cpu")
                 analysis = ModelAnalysis(model)
                 params, macs, flops = analysis.get_analysis()
                 bt.logging.info(f"🖥️ Params, Macs, Flops: {params} , {macs}, {flops}")
