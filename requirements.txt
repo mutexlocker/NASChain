@@ -5,6 +5,6 @@ torchvision==0.17.0
 bittensor==6.9.3
 pandas==2.2.1
 pynvml==11.5.0
-huggingface-hub=0.23.2
-calflops=0.2.9
-transformers=4.41.2
+huggingface-hub==0.23.2
+calflops==0.2.9
+transformers==4.41.2
