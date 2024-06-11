@@ -45,7 +45,7 @@ class ValidationConfig:
         self.min_accuracy = 0
         self.max_accuracy = 0
         self.max_download_file_size = 10*1024*1024
-        self.train_epochs = 5
+        self.train_epochs = 50
 
 
 

@@ -7,6 +7,8 @@ import torchvision.transforms as transforms
 import logging
 import numpy as np
 import torch.backends.cudnn as cudnn
+import random
+import os
 
 class Cutout(object):
     def __init__(self, length):
@@ -68,12 +70,18 @@ class ValiTrainer:
         self.testloader = DataLoader(self.testset, batch_size=self.batch_size, shuffle=False, num_workers=2)
     
     def set_seed(self, seed=0):
+        random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
         cudnn.deterministic = True
         cudnn.benchmark = False
+        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+        os.environ['PYTHONHASHSEED'] = str(seed)
+        torch.use_deterministic_algorithms(True)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
     def train(self, model):
@@ -112,6 +120,7 @@ class ValiTrainer:
         return model
 
     def test(self, model):
+        self.set_seed(0)
         model.eval()
         correct = 0
         total = 0
