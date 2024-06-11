@@ -47,7 +47,7 @@ class SimpleCNN(nn.Module):
         return x
 
 class DummyTrainer:
-    def __init__(self, epochs=5, batch_size=128, learning_rate=0.025, momentum=0.9, weight_decay=3e-4, cutout_length=16):
+    def __init__(self, epochs=50, batch_size=128, learning_rate=0.025, momentum=0.9, weight_decay=3e-4, cutout_length=16):
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate

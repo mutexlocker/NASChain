@@ -77,11 +77,11 @@ class ValiTrainer:
         np.random.seed(seed)
         cudnn.deterministic = True
         cudnn.benchmark = False
-        # os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-        # os.environ['PYTHONHASHSEED'] = str(seed)
-        # torch.use_deterministic_algorithms(True)
-        # torch.backends.cudnn.deterministic = True
-        # torch.backends.cudnn.benchmark = False
+        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+        os.environ['PYTHONHASHSEED'] = str(seed)
+        torch.use_deterministic_algorithms(True)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
     def train(self, model):
