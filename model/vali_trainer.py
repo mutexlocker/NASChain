@@ -77,11 +77,11 @@ class ValiTrainer:
         np.random.seed(seed)
         cudnn.deterministic = True
         cudnn.benchmark = False
-        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-        os.environ['PYTHONHASHSEED'] = str(seed)
-        torch.use_deterministic_algorithms(True)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        # os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+        # os.environ['PYTHONHASHSEED'] = str(seed)
+        # torch.use_deterministic_algorithms(True)
+        # torch.backends.cudnn.deterministic = True
+        # torch.backends.cudnn.benchmark = False
 
 
     def train(self, model):
@@ -120,7 +120,7 @@ class ValiTrainer:
         return model
 
     def test(self, model):
-        self.set_seed(0)
+        # self.set_seed(0)
         model.eval()
         correct = 0
         total = 0
@@ -141,7 +141,7 @@ class ValiTrainer:
         for name, param in model.named_parameters():
             if param.dim() >= 2:  # Ensure the parameter has at least two dimensions
                 if 'weight' in name:
-                    nn.init.xavier_uniform(param.data)
+                    nn.init.xavier_uniform_(param.data)
             elif param.dim() == 1:  # Handle biases separately if they are one-dimensional
                 if 'bias' in name:
                     nn.init.constant_(param.data, 0)
