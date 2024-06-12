@@ -65,7 +65,7 @@ class DummyTrainer:
         ])
 
         # Adding Cutout to the transform
-        # transform.transforms.append(Cutout(self.cutout_length))
+        transform.transforms.append(Cutout(self.cutout_length))
 
         self.trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
         self.trainloader = DataLoader(self.trainset, batch_size=self.batch_size, shuffle=True, num_workers=2)
