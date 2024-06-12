@@ -34,18 +34,10 @@ from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModel
 from model.storage.disk import utils
 from model.vali_trainer import ValiTrainer
 from model.model_analysis import ModelAnalysis
+from model.vali_config import ValidationConfig
 import traceback
 
-class ValidationConfig:
-    def __init__(self):
-        self.min_parameters = 0
-        self.max_parameters = 0
-        self.min_flops = 0
-        self.max_flops = 0
-        self.min_accuracy = 0
-        self.max_accuracy = 0
-        self.max_download_file_size = 10*1024*1024
-        self.train_epochs = 50
+
 
 
 

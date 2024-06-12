@@ -10,7 +10,8 @@ class ModelAnalysis:
             model=self.model,
             input_shape=self.input_shape,
             output_as_string=False,
-            output_precision=4
+            output_precision=4,
+            print_detailed=False,
         )
         return params, macs, flops
 

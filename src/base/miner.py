@@ -37,7 +37,7 @@ from model.storage.hugging_face.hugging_face_model_store import HuggingFaceModel
 from model.storage.remote_model_store import RemoteModelStore
 from model.dummy_trainer import DummyTrainer
 from model.model_analysis import ModelAnalysis
-
+from model.vali_config import ValidationConfig
 
 class BaseMinerNeuron(BaseNeuron):
     """
@@ -123,18 +123,19 @@ class BaseMinerNeuron(BaseNeuron):
         bt.logging.info(f"⛏️ Miner starting at block: {self.block}")
         # This loop maintains the miner's operations until intentionally stopped.
         try:
+            vali_config = ValidationConfig()
             metadata_store = ChainModelMetadataStore(self.subtensor, self.wallet, self.config.netuid)
             remote_model_store = HuggingFaceModelStore()
             upload_dir = ""
-            run_id = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")         
             # namespace, name = utils.validate_hf_repo_id(self.config.hf_repo_id)
             # bt.logging.info(f"Hugface namespace and name : {namespace},{name}")
-            model_id = ModelId(namespace=self.config.hf_repo_id, name='naschain') #,accuracy="[99.11,255.12,300.12]"
+            model_id = ModelId(namespace=self.config.hf_repo_id, name='naschain')
             HuggingFaceModelStore.assert_access_token_exists()
             # Replace below code with you NAS algo to generate optmial model for you or give a path to model from args
             if self.config.model.dir is None:
                 bt.logging.info("Training Model!")
-                trainer = DummyTrainer(epochs=10)
+                #replace dummy Trainer with NAS or manully optmize the Dummy Trainer 
+                trainer = DummyTrainer(epochs=vali_config.train_epochs)
                 trainer.train()
                 model = trainer.get_model()    
                 if not os.path.exists(self.save_dir):

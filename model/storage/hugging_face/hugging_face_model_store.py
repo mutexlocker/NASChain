@@ -7,6 +7,7 @@ from model.storage.disk import utils
 # from transformers import AutoModelForCausalLM
 
 from model.storage.remote_model_store import RemoteModelStore
+from model.vali_config import ValidationConfig
 import constants
 
 
@@ -23,6 +24,7 @@ class HuggingFaceModelStore(RemoteModelStore):
     async def upload_model(self, model: Model) -> ModelId:
         """Uploads a trained model to Hugging Face."""
         token = HuggingFaceModelStore.assert_access_token_exists()
+        vali_config = ValidationConfig()
         repo_id = model.id.namespace + "/" + model.id.name
         api = HfApi()
         # # PreTrainedModel.save_pretrained only saves locally
@@ -65,7 +67,7 @@ class HuggingFaceModelStore(RemoteModelStore):
         # TODO consider skipping the redownload if a hash is already provided.
         # To get the hash we need to redownload it at a local tmp directory after which it can be deleted.
         with tempfile.TemporaryDirectory() as temp_dir:
-            model_with_hash = await self.download_model(model_id_with_commit, temp_dir)
+            model_with_hash = await self.download_model(model_id_with_commit, temp_dir, vali_config.max_download_file_size)
             # Return a ModelId with both the correct commit and hash.
             return model_with_hash.id
 
